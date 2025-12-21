@@ -10,10 +10,14 @@ import (
 
 type UserController struct {
 	UserUseCase *usecases.UserUseCase
+	JWTSecret   string
 }
 
-func NewUserController(uc *usecases.UserUseCase) *UserController {
-	return &UserController{UserUseCase: uc}
+func NewUserController(uc *usecases.UserUseCase, secret string) *UserController {
+	return &UserController{
+		UserUseCase: uc,
+		JWTSecret:   secret,
+	}
 }
 
 type RegisterInput struct {
@@ -56,7 +60,7 @@ func (c *UserController) Login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Role)
+	token, err := utils.GenerateToken(user.ID, user.Role, c.JWTSecret)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return

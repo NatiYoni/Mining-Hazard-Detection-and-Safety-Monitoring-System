@@ -13,6 +13,7 @@ func SetupRouter(
 	alertController *controllers.AlertController,
 	userController *controllers.UserController,
 	imageController *controllers.ImageController,
+	jwtSecret string,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -28,13 +29,13 @@ func SetupRouter(
 
 	// Protected routes
 	protected := api.Group("/")
-	protected.Use(middleware.AuthMiddleware())
+	protected.Use(middleware.AuthMiddleware(jwtSecret))
 	{
 		// Sensor Data
 		protected.POST("/sensor-data", sensorController.ReceiveSensorData)
 
-		// Devices
-		protected.POST("/devices", deviceController.CreateDevice)
+		// Devices (Admin only)
+		protected.POST("/devices", middleware.RoleMiddleware("Admin"), deviceController.CreateDevice)
 		protected.GET("/devices", deviceController.GetAllDevices)
 		protected.GET("/devices/:id", deviceController.GetDeviceByID)
 

@@ -31,7 +31,9 @@ func ConnectDB(cfg *config.Config) {
 		)
 	}
 
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		PrepareStmt: false, // Disable prepared statements for compatibility with Supabase Transaction Pooler (Port 6543)
+	})
 	if err != nil {
 		log.Fatal("Failed to connect to database: ", err)
 	}

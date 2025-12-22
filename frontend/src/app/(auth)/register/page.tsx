@@ -23,7 +23,9 @@ export default function RegisterPage() {
       await api.post("/register", { username, password, role });
       router.push("/login?registered=true");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to register. Please try again.");
+      console.error("Registration error:", err);
+      const errorMessage = err.response?.data?.error || err.message || "Failed to register. Please try again.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -35,7 +35,9 @@ func (c *UserController) Register(ctx *gin.Context) {
 
 	err := c.UserUseCase.Register(input.Username, input.Password, input.Role)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
+		// Return the actual error message to help with debugging (e.g., "duplicate key value violates unique constraint")
+		// In a production app, you might want to map this to a user-friendly message
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

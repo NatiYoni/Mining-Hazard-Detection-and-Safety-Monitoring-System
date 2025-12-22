@@ -66,5 +66,8 @@ func (c *UserController) Login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"token": token})
+	ctx.JSON(http.StatusOK, gin.H{
+		"token": token,
+		"user":  user,
+	})
 }

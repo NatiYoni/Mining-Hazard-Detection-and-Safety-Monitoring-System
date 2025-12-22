@@ -42,6 +42,14 @@ func (uc *SensorUseCase) ProcessSensorData(deviceID uuid.UUID, sensorType string
 	return nil
 }
 
+func (uc *SensorUseCase) GetLatest(deviceID uuid.UUID) (*entities.SensorReading, error) {
+	return uc.SensorRepo.GetLatestByDeviceID(deviceID)
+}
+
+func (uc *SensorUseCase) GetHistory(deviceID uuid.UUID, start, end string) ([]entities.SensorReading, error) {
+	return uc.SensorRepo.GetHistory(deviceID, start, end)
+}
+
 func (uc *SensorUseCase) checkHazards(deviceID uuid.UUID, sensorType string, data map[string]interface{}) {
 	// Gas Sensor Checks
 	if sensorType == "gas" {

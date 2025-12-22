@@ -29,3 +29,7 @@ func (uc *ImageUseCase) SaveImage(deviceID uuid.UUID, imageURL string) (*entitie
 func (uc *ImageUseCase) GetImage(id uuid.UUID) (*entities.Image, error) {
 	return uc.ImageRepo.FindByID(id)
 }
+
+func (uc *ImageUseCase) GetLatest(deviceID uuid.UUID) (*entities.Image, error) {
+	return uc.ImageRepo.GetLatestByDeviceID(deviceID)
+}

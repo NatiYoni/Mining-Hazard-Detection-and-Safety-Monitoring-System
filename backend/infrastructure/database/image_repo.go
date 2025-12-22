@@ -25,3 +25,9 @@ func (r *ImageRepo) FindByID(id uuid.UUID) (*entities.Image, error) {
 	err := r.DB.First(&image, "id = ?", id).Error
 	return &image, err
 }
+
+func (r *ImageRepo) GetLatestByDeviceID(deviceID uuid.UUID) (*entities.Image, error) {
+	var image entities.Image
+	err := r.DB.Where("device_id = ?", deviceID).Order("timestamp desc").First(&image).Error
+	return &image, err
+}

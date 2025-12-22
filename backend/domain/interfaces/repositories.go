@@ -15,6 +15,8 @@ type DeviceRepository interface {
 type SensorRepository interface {
 	Create(reading *entities.SensorReading) error
 	FindByDeviceID(deviceID uuid.UUID) ([]entities.SensorReading, error)
+	GetLatestByDeviceID(deviceID uuid.UUID) (*entities.SensorReading, error)
+	GetHistory(deviceID uuid.UUID, start, end string) ([]entities.SensorReading, error)
 }
 
 type AlertRepository interface {
@@ -31,4 +33,5 @@ type UserRepository interface {
 type ImageRepository interface {
 	Create(image *entities.Image) error
 	FindByID(id uuid.UUID) (*entities.Image, error)
+	GetLatestByDeviceID(deviceID uuid.UUID) (*entities.Image, error)
 }

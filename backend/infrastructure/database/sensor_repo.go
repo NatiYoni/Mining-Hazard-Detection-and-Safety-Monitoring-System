@@ -25,3 +25,22 @@ func (r *SensorRepo) FindByDeviceID(deviceID uuid.UUID) ([]entities.SensorReadin
 	err := r.DB.Where("device_id = ?", deviceID).Find(&readings).Error
 	return readings, err
 }
+
+func (r *SensorRepo) GetLatestByDeviceID(deviceID uuid.UUID) (*entities.SensorReading, error) {
+	var reading entities.SensorReading
+	err := r.DB.Where("device_id = ?", deviceID).Order("timestamp desc").First(&reading).Error
+	return &reading, err
+}
+
+func (r *SensorRepo) GetHistory(deviceID uuid.UUID, start, end string) ([]entities.SensorReading, error) {
+	var readings []entities.SensorReading
+	query := r.DB.Where("device_id = ?", deviceID)
+	if start != "" {
+		query = query.Where("timestamp >= ?", start)
+	}
+	if end != "" {
+		query = query.Where("timestamp <= ?", end)
+	}
+	err := query.Order("timestamp asc").Find(&readings).Error
+	return readings, err
+}

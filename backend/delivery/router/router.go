@@ -18,6 +18,7 @@ func SetupRouter(
 	r := gin.Default()
 
 	// Middleware
+	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.LoggingMiddleware())
 
 	// Public routes

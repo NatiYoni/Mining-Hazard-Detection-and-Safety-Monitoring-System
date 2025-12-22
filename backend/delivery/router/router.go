@@ -3,7 +3,9 @@ package router
 import (
 	"minesense-backend/delivery/controllers"
 	"minesense-backend/infrastructure/middleware"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,8 +19,15 @@ func SetupRouter(
 ) *gin.Engine {
 	r := gin.Default()
 
-	// Middleware
-	r.Use(middleware.CORSMiddleware())
+	// CORS Configuration
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	config.AllowCredentials = true
+	config.MaxAge = 12 * time.Hour
+
+	r.Use(cors.New(config))
 	r.Use(middleware.LoggingMiddleware())
 
 	// Public routes

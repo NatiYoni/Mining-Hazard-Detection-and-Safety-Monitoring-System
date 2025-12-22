@@ -59,3 +59,18 @@ func (c *ImageController) GetImage(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, image)
 }
+
+func (c *ImageController) GetLatest(ctx *gin.Context) {
+	deviceIDStr := ctx.Query("device_id")
+	deviceID, err := uuid.Parse(deviceIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID"})
+		return
+	}
+	image, err := c.ImageUseCase.GetLatest(deviceID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "No image found"})
+		return
+	}
+	ctx.JSON(http.StatusOK, image)
+}

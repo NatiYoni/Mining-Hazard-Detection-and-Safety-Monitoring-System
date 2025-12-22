@@ -5,6 +5,7 @@ import (
 	"minesense-backend/delivery/controllers"
 	"minesense-backend/delivery/router"
 	"minesense-backend/infrastructure/database"
+	"minesense-backend/infrastructure/websocket"
 	"minesense-backend/usecases"
 )
 
@@ -14,6 +15,10 @@ func main() {
 
 	// Connect to database
 	database.ConnectDB(cfg)
+
+	// Initialize WebSocket Hub
+	hub := websocket.NewHub()
+	go hub.Run()
 
 	// Initialize Repositories
 	deviceRepo := database.NewDeviceRepo(database.DB)
@@ -31,7 +36,7 @@ func main() {
 
 	// Initialize Controllers
 	deviceController := controllers.NewDeviceController(deviceUseCase)
-	sensorController := controllers.NewSensorController(sensorUseCase)
+	sensorController := controllers.NewSensorController(sensorUseCase, hub)
 	alertController := controllers.NewAlertController(alertUseCase)
 	userController := controllers.NewUserController(userUseCase, cfg.JWTSecret)
 	imageController := controllers.NewImageController(imageUseCase)

@@ -25,6 +25,7 @@ func SetupRouter(
 	{
 		api.POST("/login", userController.Login)
 		api.POST("/register", userController.Register) // In a real app, this might be protected or admin-only
+		api.GET("/ws", sensorController.ServeWS)       // WebSocket endpoint for real-time updates
 	}
 
 	// Protected routes
@@ -33,6 +34,8 @@ func SetupRouter(
 	{
 		// Sensor Data
 		protected.POST("/sensor-data", sensorController.ReceiveSensorData)
+		protected.GET("/sensors/latest", sensorController.GetLatest)
+		protected.GET("/sensors/history", sensorController.GetHistory)
 
 		// Devices (Admin only)
 		protected.POST("/devices", middleware.RoleMiddleware("Admin"), deviceController.CreateDevice)
@@ -45,6 +48,7 @@ func SetupRouter(
 		// Images
 		protected.POST("/images", imageController.UploadImage)
 		protected.GET("/images/:id", imageController.GetImage)
+		protected.GET("/images/latest", imageController.GetLatest)
 	}
 
 	return r

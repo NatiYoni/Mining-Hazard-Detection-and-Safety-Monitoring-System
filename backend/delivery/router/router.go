@@ -30,6 +30,11 @@ func SetupRouter(
 	r.Use(cors.New(config))
 	r.Use(middleware.LoggingMiddleware())
 
+	// Health Check
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "message": "Mining Hazard Detection API is running"})
+	})
+
 	// Public routes
 	api := r.Group("/api/v1")
 	{

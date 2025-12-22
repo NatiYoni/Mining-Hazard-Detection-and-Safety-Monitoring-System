@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -41,5 +40,7 @@ func main() {
 	r := router.SetupRouter(sensorController, deviceController, alertController, userController, imageController, cfg.JWTSecret)
 
 	// Run Server
-	r.Run(":" + cfg.Port)
+	// Note: Render requires the server to bind to 0.0.0.0 (which Gin does by default with Run())
+	// and listen on the port defined by the PORT environment variable.
+	r.Run("0.0.0.0:" + cfg.Port)
 }

@@ -32,7 +32,7 @@ func ConnectDB(cfg *config.Config) {
 	}
 
 	DB, err = gorm.Open(postgres.New(postgres.Config{
-		DSN:dsn,
+		DSN:                  dsn,
 		PreferSimpleProtocol: true, // Required for Supabase Transaction Pooler (Port 6543)
 	}), &gorm.Config{
 		PrepareStmt: false, // Disable GORM's prepared statement caching
@@ -52,7 +52,8 @@ func ConnectDB(cfg *config.Config) {
 		&entities.Image{},
 	)
 	if err != nil {
-		log.Fatal("Failed to migrate database: ", err)
+		log.Printf("Warning: Database migration encountered an issue: %v. Continuing application startup...", err)
+	} else {
+		log.Println("Database migration completed")
 	}
-	log.Println("Database migration completed")
 }

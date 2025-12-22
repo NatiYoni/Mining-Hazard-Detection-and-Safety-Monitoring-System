@@ -24,7 +24,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
     // Use wss:// for production (https), ws:// for local (http)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // Fallback to localhost if API_URL is not set, otherwise parse from env
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mining-hazard-detection-and-safety-monitoring-system.onrender.com/api/v1';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mining-hazard-detection-and-safety.onrender.com/api/v1';
     // Extract host from API URL
     const host = apiUrl.replace(/^https?:\/\//, '').replace(/\/api\/v1\/?$/, '');
     

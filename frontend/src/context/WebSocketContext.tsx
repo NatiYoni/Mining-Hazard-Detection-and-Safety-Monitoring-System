@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { SensorData } from '@/types';
+import { useAuth } from './AuthContext';
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -11,12 +12,15 @@ interface WebSocketContextType {
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
 export function WebSocketProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [lastReading, setLastReading] = useState<SensorData | null>(null);
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const connect = () => {
+    if (!user) return; // Don't connect if not logged in
+
     // Use wss:// for production (https), ws:// for local (http)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // Fallback to localhost if API_URL is not set, otherwise parse from env
@@ -60,12 +64,14 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    connect();
+    if (user) {
+      connect();
+    }
     return () => {
       if (ws.current) ws.current.close();
       if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
     };
-  }, []);
+  }, [user]);
 
   return (
     <WebSocketContext.Provider value={{ isConnected, lastReading }}>

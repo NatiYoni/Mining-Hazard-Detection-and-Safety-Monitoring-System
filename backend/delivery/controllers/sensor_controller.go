@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"minesense-backend/infrastructure/websocket"
 	"minesense-backend/usecases"
 	"net/http"
@@ -21,25 +23,69 @@ func NewSensorController(uc *usecases.SensorUseCase, hub *websocket.Hub) *Sensor
 }
 
 type SensorDataInput struct {
-	DeviceID   string          `json:"device_id" binding:"required"`
-	SensorType string          `json:"sensor_type" binding:"required"`
-	Payload    json.RawMessage `json:"payload" binding:"required"`
+	DeviceID   string          `json:"device_id"`
+	SensorType string          `json:"sensor_type"`
+	Payload    json.RawMessage `json:"payload"`
 }
 
 func (c *SensorController) ReceiveSensorData(ctx *gin.Context) {
-	var input SensorDataInput
-	if err := ctx.ShouldBindJSON(&input); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	deviceID, err := uuid.Parse(input.DeviceID)
+	// Read body
+	bodyBytes, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read body"})
 		return
 	}
+	// Restore body just in case
+	ctx.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	err = c.SensorUseCase.ProcessSensorData(deviceID, input.SensorType, input.Payload)
+	// 1. Try to parse as standard SensorDataInput
+	var input SensorDataInput
+	var deviceID uuid.UUID
+	var sensorType string
+	var payload json.RawMessage
+
+	// We unmarshal manually to check fields
+	if err := json.Unmarshal(bodyBytes, &input); err == nil && input.DeviceID != "" && input.SensorType != "" {
+		// Standard format
+		id, err := uuid.Parse(input.DeviceID)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID format"})
+			return
+		}
+		deviceID = id
+		sensorType = input.SensorType
+		payload = input.Payload
+	} else {
+		// 2. Fallback: Flat JSON (Telemetry)
+		// Try to get DeviceID from Context (Auth Token)
+		if idVal, exists := ctx.Get("user_id"); exists {
+			// Handle potential types for user_id from JWT
+			switch v := idVal.(type) {
+			case string:
+				deviceID, _ = uuid.Parse(v)
+			case uuid.UUID:
+				deviceID = v
+			}
+		}
+
+		// If still no DeviceID, check if it's in the flat JSON
+		var flatMap map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &flatMap); err == nil {
+			if idStr, ok := flatMap["device_id"].(string); ok && deviceID == uuid.Nil {
+				deviceID, _ = uuid.Parse(idStr)
+			}
+		}
+
+		if deviceID == uuid.Nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Device ID required (in token or body)"})
+			return
+		}
+
+		sensorType = "telemetry" // Default for flat JSON
+		payload = bodyBytes      // The whole body is the payload
+	}
+
+	err = c.SensorUseCase.ProcessSensorData(deviceID, sensorType, payload)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process data"})
 		return
@@ -48,9 +94,9 @@ func (c *SensorController) ReceiveSensorData(ctx *gin.Context) {
 	// Broadcast to WebSocket clients
 	c.Hub.BroadcastData(gin.H{
 		"type":        "sensor_update",
-		"device_id":   input.DeviceID,
-		"sensor_type": input.SensorType,
-		"payload":     input.Payload,
+		"device_id":   deviceID.String(),
+		"sensor_type": sensorType,
+		"payload":     payload,
 		"timestamp":   time.Now(),
 	})
 

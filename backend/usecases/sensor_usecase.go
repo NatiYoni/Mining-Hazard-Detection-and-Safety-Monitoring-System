@@ -51,28 +51,37 @@ func (uc *SensorUseCase) GetHistory(deviceID uuid.UUID, start, end string) ([]en
 }
 
 func (uc *SensorUseCase) checkHazards(deviceID uuid.UUID, sensorType string, data map[string]interface{}) {
-	// Gas Sensor Checks
-	if sensorType == "gas" {
-		if val, ok := data["co2"].(float64); ok && val > 1000 {
-			uc.createAlert(deviceID, "Gas Hazard", "High", "Critical CO2 levels detected!")
-		}
-		if val, ok := data["methane"].(float64); ok && val > 500 {
-			uc.createAlert(deviceID, "Gas Hazard", "Critical", "Explosive Methane levels detected!")
+	// Combined Telemetry or Individual Checks
+	// We check for keys regardless of sensorType to be robust, or strictly if sensorType is "telemetry"
+
+	// 1. Gas Sensor (MQ-2)
+	// Threshold: > 700 PPM -> Critical
+	if val, ok := data["gas"].(float64); ok {
+		if val > 700 {
+			uc.createAlert(deviceID, "Gas Hazard", "Critical", "Dangerous Gas Levels (>700 PPM) detected! Evacuate!")
 		}
 	}
 
-	// Temperature Sensor Checks
-	if sensorType == "temperature" {
-		if val, ok := data["temp"].(float64); ok && val > 45 {
-			uc.createAlert(deviceID, "Heat Hazard", "Medium", "High temperature detected!")
+	// 2. Temperature Sensor (DHT-22)
+	// Thresholds: > 38°C (Critical), > 31°C (Caution)
+	if val, ok := data["temp"].(float64); ok {
+		if val > 38 {
+			uc.createAlert(deviceID, "Heat Stress", "Critical", "Critical Heat (>38°C)! Mandatory removal from area.")
+		} else if val > 31 {
+			uc.createAlert(deviceID, "Heat Stress", "Caution", "High Heat (>31°C). Hydration and rest suggested.")
 		}
 	}
 
-	// Vibration/Motion Checks
-	if sensorType == "vibration" {
-		if val, ok := data["g_force"].(float64); ok && val > 2.5 {
-			uc.createAlert(deviceID, "Seismic Hazard", "High", "Strong vibration/impact detected!")
-		}
+	// 3. Fall Detection (MPU-6050)
+	// Boolean flag from device
+	if val, ok := data["fall"].(bool); ok && val {
+		uc.createAlert(deviceID, "Man-Down", "Critical", "Fall detected! Man-down event initiated.")
+	}
+
+	// 4. Structural/Vibration (Piezo)
+	// Assuming "vibration" key or similar if sent
+	if val, ok := data["vibration"].(float64); ok && val > 500 { // Threshold example, adjust as needed
+		uc.createAlert(deviceID, "Structural Warning", "High", "High-frequency vibration detected!")
 	}
 }
 

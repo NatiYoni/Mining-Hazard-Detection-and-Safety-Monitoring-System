@@ -1,14 +1,8 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface User {
-  id: string;
-  username: string;
-  role: string;
-}
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -19,7 +13,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -38,7 +32,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-    router.push('/');
+
+    // Role-based redirection
+    switch (userData.role) {
+      case 'Admin':
+        router.push('/dashboard');
+        break;
+      case 'Supervisor':
+        // If supervisor has assigned device, go there. Else maybe a generic page or error.
+        if (userData.assigned_device_id) {
+          router.push(`/device/${userData.assigned_device_id}`);
+        } else {
+          router.push('/device'); // Fallback
+        }
+        break;
+      case 'Worker':
+        router.push('/alerts');
+        break;
+      default:
+        router.push('/');
+    }
   };
 
   const logout = () => {
@@ -53,12 +66,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};

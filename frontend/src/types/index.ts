@@ -1,29 +1,50 @@
-export interface SensorData {
+export type UserRole = 'Admin' | 'Supervisor' | 'Worker';
+
+export interface User {
   id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  assigned_device_id?: string; // For Supervisors/Workers
+}
+
+export interface SensorPayload {
+  temp?: number;
+  gas?: number;
+  fall?: boolean;
+  vibration?: number;
+  [key: string]: any;
+}
+
+export interface SensorReading {
   device_id: string;
-  sensor_type: string;
-  payload: {
-    temperature?: number;
-    humidity?: number;
-    methane_level?: number;
-    dust_level?: number;
-    [key: string]: any;
-  };
+  sensor_type: string; // 'telemetry' | 'gas' | 'temperature' | ...
+  payload: SensorPayload;
   timestamp: string;
 }
 
-export interface Device {
-  id: string;
-  name: string;
-  location: string;
-  status: 'active' | 'inactive' | 'maintenance';
+export interface DeviceStatus {
+  device_id: string;
+  is_online: boolean;
   last_seen: string;
+  current_readings?: SensorPayload;
+  status: 'Safe' | 'Warning' | 'Critical';
 }
 
 export interface Alert {
   id: string;
   device_id: string;
-  severity: 'critical' | 'warning' | 'info';
+  severity: 'Critical' | 'Warning' | 'Info';
   message: string;
   timestamp: string;
+  acknowledged: boolean;
+}
+
+export interface WebSocketMessage {
+  type: 'sensor_update' | 'alert_new' | 'device_status';
+  device_id?: string;
+  payload?: any;
+  timestamp?: string;
+  // For sensor_update specifically
+  sensor_type?: string;
 }

@@ -1,36 +1,30 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { SensorData } from '@/types';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+import { WebSocketMessage, DeviceStatus, Alert, SensorPayload } from '../types';
 
 interface WebSocketContextType {
   isConnected: boolean;
-  lastReading: SensorData | null;
+  lastMessage: WebSocketMessage | null;
+  devices: Map<string, DeviceStatus>;
+  alerts: Alert[];
+  sendMessage: (msg: any) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
-export function WebSocketProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [lastReading, setLastReading] = useState<SensorData | null>(null);
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
+  const [devices, setDevices] = useState<Map<string, DeviceStatus>>(new Map());
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const connect = () => {
-    if (!user) return; // Don't connect if not logged in
-
-    // Use wss:// for production (https), ws:// for local (http)
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Fallback to localhost if API_URL is not set, otherwise parse from env
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mining-hazard-detection-and-safety.onrender.com/api/v1';
-    // Extract host from API URL
-    const host = apiUrl.replace(/^https?:\/\//, '').replace(/\/api\/v1\/?$/, '');
-    
-    const wsUrl = `${protocol}//${host}/api/v1/ws`;
-
-    console.log('Connecting to WebSocket:', wsUrl);
+    // In production, use env var. For now, hardcode localhost.
+    const wsUrl = 'ws://localhost:8080/api/v1/ws'; 
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
@@ -39,21 +33,10 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
     };
 
-    ws.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'sensor_update') {
-          setLastReading(data);
-        }
-      } catch (err) {
-        console.error('WebSocket message parse error:', err);
-      }
-    };
-
     ws.current.onclose = () => {
       console.log('WebSocket Disconnected');
       setIsConnected(false);
-      // Try to reconnect after 3 seconds
+      // Try reconnect in 3 seconds
       reconnectTimeout.current = setTimeout(connect, 3000);
     };
 
@@ -61,29 +44,74 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       console.error('WebSocket Error:', error);
       ws.current?.close();
     };
+
+    ws.current.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        setLastMessage(message);
+        handleMessage(message);
+      } catch (e) {
+        console.error('Failed to parse WS message:', e);
+      }
+    };
+  };
+
+  const handleMessage = (msg: WebSocketMessage) => {
+    if (msg.type === 'sensor_update' && msg.device_id) {
+      setDevices((prev) => {
+        const newMap = new Map(prev);
+        const current = newMap.get(msg.device_id!) || {
+          device_id: msg.device_id!,
+          is_online: true,
+          last_seen: new Date().toISOString(),
+          status: 'Safe',
+          current_readings: {}
+        };
+
+        // Update readings
+        const payload = msg.payload as SensorPayload;
+        current.current_readings = { ...current.current_readings, ...payload };
+        current.last_seen = msg.timestamp || new Date().toISOString();
+        current.is_online = true;
+
+        // Simple frontend status logic (can be overridden by backend alerts)
+        if (payload.fall) current.status = 'Critical';
+        else if ((payload.gas || 0) > 700) current.status = 'Critical';
+        else if ((payload.temp || 0) > 38) current.status = 'Critical';
+        else if ((payload.temp || 0) > 31) current.status = 'Warning';
+        else current.status = 'Safe';
+
+        newMap.set(msg.device_id!, current);
+        return newMap;
+      });
+    }
+  };
+
+  const sendMessage = (msg: any) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify(msg));
+    }
   };
 
   useEffect(() => {
-    if (user) {
-      connect();
-    }
+    connect();
     return () => {
-      if (ws.current) ws.current.close();
+      ws.current?.close();
       if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
     };
-  }, [user]);
+  }, []);
 
   return (
-    <WebSocketContext.Provider value={{ isConnected, lastReading }}>
+    <WebSocketContext.Provider value={{ isConnected, lastMessage, devices, alerts, sendMessage }}>
       {children}
     </WebSocketContext.Provider>
   );
-}
+};
 
-export function useWebSocket() {
+export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useWebSocket must be used within a WebSocketProvider');
   }
   return context;
-}
+};

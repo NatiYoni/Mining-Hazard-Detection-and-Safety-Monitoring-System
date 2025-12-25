@@ -27,7 +27,7 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Safety Dashboard</h1>
               <p className="text-sm text-gray-500">
-                Welcome back, {user?.name || 'Admin'}
+                Welcome back, {user?.username || 'Admin'}
               </p>
             </div>
           </div>

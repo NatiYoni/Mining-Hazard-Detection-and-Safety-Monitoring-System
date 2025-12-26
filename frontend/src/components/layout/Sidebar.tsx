@@ -3,32 +3,38 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Activity, AlertTriangle, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Activity, AlertTriangle, Settings, LogOut, Video } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const routes = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    href: "/",
+    href: "/dashboard",
     color: "text-sky-500",
   },
   {
     label: "Real-time Monitoring",
     icon: Activity,
-    href: "/monitoring",
+    href: "/dashboard/monitoring",
     color: "text-violet-500",
+  },
+  {
+    label: "Video Stream",
+    icon: Video,
+    href: "/dashboard/stream",
+    color: "text-orange-500",
   },
   {
     label: "Alerts",
     icon: AlertTriangle,
-    href: "/alerts",
+    href: "/dashboard/alerts",
     color: "text-pink-700",
   },
   {
     label: "Settings",
     icon: Settings,
-    href: "/settings",
+    href: "/dashboard/settings",
     color: "text-gray-500",
   },
 ];

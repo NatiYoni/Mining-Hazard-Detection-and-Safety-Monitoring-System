@@ -11,13 +11,13 @@ export const DeviceHeader = ({ device }: { device: DeviceStatus }) => {
   const isAdmin = user?.role === 'Admin';
 
   const statusColors = {
-    Safe: 'bg-green-100 text-green-700 border-green-200',
-    Warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    Critical: 'bg-red-100 text-red-800 border-red-200 animate-pulse',
+    Safe: 'bg-success/10 text-success border-success/20',
+    Warning: 'bg-warning/10 text-warning border-warning/20',
+    Critical: 'bg-destructive/10 text-destructive border-destructive/20 animate-pulse',
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-4 sm:px-6 lg:px-8">
+    <div className="bg-background border-b border-border px-4 py-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           
@@ -25,15 +25,15 @@ export const DeviceHeader = ({ device }: { device: DeviceStatus }) => {
             {isAdmin && (
               <Link 
                 href="/dashboard"
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-accent rounded-full transition-colors"
               >
-                <ArrowLeft className="h-5 w-5 text-gray-500" />
+                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
               </Link>
             )}
             
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-foreground">
                   Device: {device.device_id.slice(0, 8)}
                 </h1>
                 <span className={`px-3 py-1 rounded-full text-sm font-bold border ${statusColors[device.status]}`}>
@@ -41,7 +41,7 @@ export const DeviceHeader = ({ device }: { device: DeviceStatus }) => {
                 </span>
               </div>
               
-              <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+              <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
                   <span>Worker: Assigned Miner</span>

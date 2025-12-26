@@ -73,7 +73,7 @@ export const VideoPlayer = ({ deviceIp }: VideoPlayerProps) => {
   }
 
   return (
-    <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-gray-800">
+    <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-border">
       {/* Status Overlay */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
         <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-red-600 animate-pulse' : 'bg-gray-500'}`} />

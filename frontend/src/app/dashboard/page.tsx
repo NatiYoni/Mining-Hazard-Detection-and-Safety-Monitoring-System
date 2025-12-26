@@ -22,7 +22,7 @@ export default function DashboardPage() {
   if (!user || user.role === 'Worker') return null; // Loading or redirecting
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Sticky Alerts Panel */}
       <AlertsPanel />
 
@@ -41,7 +41,7 @@ export default function DashboardPage() {
 
         {/* Device Table */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-foreground">
             Live Device Overview
           </h2>
           <DeviceTable />

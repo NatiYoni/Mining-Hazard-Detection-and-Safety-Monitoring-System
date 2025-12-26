@@ -32,16 +32,16 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="w-full max-w-md space-y-8 bg-white/5 p-8 rounded-2xl backdrop-blur-lg border border-white/10 shadow-2xl">
+    <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-background">
+      <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-2xl border border-border shadow-2xl">
         <div className="flex flex-col items-center">
-          <div className="h-12 w-12 rounded-full bg-indigo-500/20 flex items-center justify-center mb-4">
-            <ShieldCheck className="h-7 w-7 text-indigo-400" />
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <ShieldCheck className="h-7 w-7 text-primary" />
           </div>
-          <h2 className="text-center text-3xl font-bold tracking-tight text-white">
+          <h2 className="text-center text-3xl font-bold tracking-tight text-foreground">
             Create an account
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-400">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             Join the safety monitoring network
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function RegisterPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-1">
+              <label htmlFor="username" className="block text-sm font-medium text-muted-foreground mb-1">
                 Username
               </label>
               <input
@@ -57,7 +57,7 @@ export default function RegisterPage() {
                 name="username"
                 type="text"
                 required
-                className="block w-full rounded-lg border-0 bg-white/5 py-2.5 px-4 text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all"
+                className="block w-full rounded-lg border border-input bg-background py-2.5 px-4 text-foreground shadow-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 transition-all"
                 placeholder="johndoe"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -65,13 +65,13 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-slate-300 mb-1">
+              <label htmlFor="role" className="block text-sm font-medium text-muted-foreground mb-1">
                 Role
               </label>
               <select
                 id="role"
                 name="role"
-                className="block w-full rounded-lg border-0 bg-white/5 py-2.5 px-4 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 [&>option]:bg-slate-800"
+                className="block w-full rounded-lg border border-input bg-background py-2.5 px-4 text-foreground shadow-sm focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 [&>option]:bg-background"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
@@ -82,7 +82,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-1">
                 Password
               </label>
               <input
@@ -90,7 +90,7 @@ export default function RegisterPage() {
                 name="password"
                 type="password"
                 required
-                className="block w-full rounded-lg border-0 bg-white/5 py-2.5 px-4 text-white shadow-sm ring-1 ring-inset ring-white/10 placeholder:text-slate-500 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all"
+                className="block w-full rounded-lg border border-input bg-background py-2.5 px-4 text-foreground shadow-sm placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6 transition-all"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -99,7 +99,7 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-400 text-center border border-red-500/20">
+            <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive text-center border border-destructive/20">
               {error}
             </div>
           )}
@@ -108,7 +108,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/20"
+              className="group relative flex w-full justify-center rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/20"
             >
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -122,9 +122,9 @@ export default function RegisterPage() {
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/login" className="font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
+              <Link href="/login" className="font-medium text-primary hover:text-primary/80 transition-colors">
                 Sign in
               </Link>
             </p>

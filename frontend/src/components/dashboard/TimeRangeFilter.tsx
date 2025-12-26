@@ -16,10 +16,10 @@ export function TimeRangeFilter({ value, onChange }: TimeRangeFilterProps) {
             key={range}
             type="button"
             onClick={() => onChange(range)}
-            className={`px-4 py-2 text-sm font-medium border ${
+            className={`px-4 py-2 text-sm font-medium border transition-colors ${
               value === range
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card text-foreground border-border hover:bg-muted'
             } ${
               range === '1d' ? 'rounded-l-lg' : ''
             } ${

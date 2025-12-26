@@ -23,9 +23,9 @@ export const AlertsPanel = () => {
   if (activeAlerts.length === 0) return null;
 
   return (
-    <div className="sticky top-0 z-50 w-full bg-white shadow-md border-b border-gray-200 max-h-64 overflow-y-auto">
+    <div className="sticky top-0 z-50 w-full bg-card shadow-md border-b border-border max-h-64 overflow-y-auto">
       <div className="p-4 space-y-2">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
           Active Alerts ({activeAlerts.length})
         </h3>
         <div className="grid gap-2">
@@ -55,15 +55,15 @@ const AlertCard = ({ device }: { device: DeviceStatus }) => {
     <div
       className={`flex items-center justify-between p-3 rounded-lg border-l-4 ${
         isCritical
-          ? 'bg-red-50 border-red-500 text-red-900'
-          : 'bg-yellow-50 border-yellow-500 text-yellow-900'
+          ? 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-500/50 text-red-900 dark:text-red-300'
+          : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 dark:border-yellow-500/50 text-yellow-900 dark:text-yellow-300'
       }`}
     >
       <div className="flex items-center gap-3">
         {isCritical ? (
-          <AlertTriangle className="h-5 w-5 text-red-600 animate-pulse" />
+          <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-500 animate-pulse" />
         ) : (
-          <Info className="h-5 w-5 text-yellow-600" />
+          <Info className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
         )}
         <div>
           <div className="font-bold text-sm">

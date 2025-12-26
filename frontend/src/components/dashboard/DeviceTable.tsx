@@ -52,14 +52,14 @@ export const DeviceTable = () => {
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
+          <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
             <tr>
               <th className="p-4">Device ID</th>
               <th 
-                className="p-4 cursor-pointer hover:bg-gray-100"
+                className="p-4 cursor-pointer hover:bg-muted transition-colors"
                 onClick={() => handleSort('status')}
               >
                 <div className="flex items-center gap-1">
@@ -67,7 +67,7 @@ export const DeviceTable = () => {
                 </div>
               </th>
               <th 
-                className="p-4 cursor-pointer hover:bg-gray-100"
+                className="p-4 cursor-pointer hover:bg-muted transition-colors"
                 onClick={() => handleSort('temp')}
               >
                 <div className="flex items-center gap-1">
@@ -75,7 +75,7 @@ export const DeviceTable = () => {
                 </div>
               </th>
               <th 
-                className="p-4 cursor-pointer hover:bg-gray-100"
+                className="p-4 cursor-pointer hover:bg-muted transition-colors"
                 onClick={() => handleSort('gas')}
               >
                 <div className="flex items-center gap-1">
@@ -84,7 +84,7 @@ export const DeviceTable = () => {
               </th>
               <th className="p-4">Motion</th>
               <th 
-                className="p-4 cursor-pointer hover:bg-gray-100"
+                className="p-4 cursor-pointer hover:bg-muted transition-colors"
                 onClick={() => handleSort('last_seen')}
               >
                 <div className="flex items-center gap-1">
@@ -94,13 +94,13 @@ export const DeviceTable = () => {
               <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-border">
             {sortedDevices.map((device) => (
               <DeviceRow key={device.device_id} device={device} />
             ))}
             {sortedDevices.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-400">
+                <td colSpan={7} className="p-8 text-center text-muted-foreground">
                   No devices connected.
                 </td>
               </tr>
@@ -114,16 +114,16 @@ export const DeviceTable = () => {
 
 const DeviceRow = ({ device }: { device: DeviceStatus }) => {
   const statusColors = {
-    Safe: 'bg-green-100 text-green-700',
-    Warning: 'bg-yellow-100 text-yellow-800',
-    Critical: 'bg-red-100 text-red-800 animate-pulse',
+    Safe: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    Warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    Critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 animate-pulse',
   };
 
   const isFall = device.current_readings?.fall;
 
   return (
-    <tr className="hover:bg-gray-50 transition-colors">
-      <td className="p-4 font-mono text-gray-600">
+    <tr className="hover:bg-muted/50 transition-colors">
+      <td className="p-4 font-mono text-muted-foreground">
         {device.device_id.slice(0, 8)}...
       </td>
       <td className="p-4">
@@ -131,34 +131,34 @@ const DeviceRow = ({ device }: { device: DeviceStatus }) => {
           {device.status.toUpperCase()}
         </span>
       </td>
-      <td className="p-4 font-medium">
+      <td className="p-4 font-medium text-foreground">
         {device.current_readings?.temp?.toFixed(1) || '--'}°C
       </td>
-      <td className="p-4 font-medium">
+      <td className="p-4 font-medium text-foreground">
         {device.current_readings?.gas || '--'}
       </td>
       <td className="p-4">
         {isFall ? (
-          <span className="text-red-600 font-bold">FALL DETECTED</span>
+          <span className="text-red-600 dark:text-red-400 font-bold">FALL DETECTED</span>
         ) : (
-          <span className="text-gray-400">Normal</span>
+          <span className="text-muted-foreground">Normal</span>
         )}
       </td>
-      <td className="p-4 text-gray-500 text-xs">
+      <td className="p-4 text-muted-foreground text-xs">
         {new Date(device.last_seen).toLocaleTimeString()}
       </td>
       <td className="p-4 text-right">
         <div className="flex items-center justify-end gap-2">
           <Link 
-            href={`/device/${device.device_id}`}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            href={`/dashboard/device/${device.device_id}`}
+            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
             title="View Details"
           >
             <Eye className="h-4 w-4" />
           </Link>
           <Link 
-            href={`/video?device=${device.device_id}`}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            href={`/dashboard/stream?device=${device.device_id}`}
+            className="p-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
             title="Watch Video"
           >
             <Video className="h-4 w-4" />

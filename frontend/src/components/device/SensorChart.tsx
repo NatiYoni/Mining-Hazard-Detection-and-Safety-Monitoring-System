@@ -27,24 +27,24 @@ interface SensorChartProps {
 
 export const SensorChart = ({ data, color, unit, threshold, title }: SensorChartProps) => {
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-80">
+    <div className="bg-card p-4 rounded-xl shadow-sm border border-border h-80">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-700">{title}</h3>
-        <span className="text-xs text-gray-400">Last 10 Minutes</span>
+        <h3 className="font-semibold text-card-foreground">{title}</h3>
+        <span className="text-xs text-muted-foreground">Last 10 Minutes</span>
       </div>
       
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
           <XAxis 
             dataKey="time" 
-            tick={{ fontSize: 10, fill: '#9ca3af' }}
+            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis 
             unit={unit} 
-            tick={{ fontSize: 10, fill: '#9ca3af' }}
+            tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
             tickLine={false}
             axisLine={false}
             domain={['auto', 'auto']}

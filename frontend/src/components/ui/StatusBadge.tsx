@@ -8,12 +8,12 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const styles = {
-    Safe: 'bg-green-100 text-green-800',
-    Warning: 'bg-yellow-100 text-yellow-800',
-    Critical: 'bg-red-100 text-red-800',
+    Safe: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    Warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    Critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   };
 
-  const defaultStyle = 'bg-gray-100 text-gray-800';
+  const defaultStyle = 'bg-muted text-muted-foreground';
   const selectedStyle = styles[status as keyof typeof styles] || defaultStyle;
 
   return (

@@ -34,31 +34,31 @@ export const SystemSummary = () => {
         title="Total Devices"
         value={`${online} / ${total}`}
         subtext="Online Now"
-        icon={<Users className="h-6 w-6 text-blue-600" />}
-        color="bg-blue-50"
+        icon={<Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
+        color="bg-blue-50 dark:bg-blue-900/20"
       />
       <SummaryCard
         title="Critical Alerts"
         value={critical.toString()}
         subtext="Requires Action"
-        icon={<AlertOctagon className="h-6 w-6 text-red-600" />}
-        color="bg-red-50"
-        textColor="text-red-600"
+        icon={<AlertOctagon className="h-6 w-6 text-red-600 dark:text-red-400" />}
+        color="bg-red-50 dark:bg-red-900/20"
+        textColor="text-red-600 dark:text-red-400"
       />
       <SummaryCard
         title="Warnings"
         value={warning.toString()}
         subtext="Monitor Closely"
-        icon={<Activity className="h-6 w-6 text-yellow-600" />}
-        color="bg-yellow-50"
-        textColor="text-yellow-600"
+        icon={<Activity className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />}
+        color="bg-yellow-50 dark:bg-yellow-900/20"
+        textColor="text-yellow-600 dark:text-yellow-400"
       />
       <SummaryCard
         title="Avg Temperature"
         value={`${avgTemp}°C`}
         subtext="Mine Average"
-        icon={<Thermometer className="h-6 w-6 text-green-600" />}
-        color="bg-green-50"
+        icon={<Thermometer className="h-6 w-6 text-green-600 dark:text-green-400" />}
+        color="bg-green-50 dark:bg-green-900/20"
       />
     </div>
   );
@@ -70,7 +70,7 @@ const SummaryCard = ({
   subtext, 
   icon, 
   color,
-  textColor = 'text-gray-900'
+  textColor = 'text-foreground'
 }: { 
   title: string; 
   value: string; 
@@ -79,12 +79,12 @@ const SummaryCard = ({
   color: string;
   textColor?: string;
 }) => (
-  <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+  <div className="bg-card rounded-xl shadow-sm p-6 border border-border">
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-sm font-medium text-gray-500">{title}</p>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
         <p className={`text-2xl font-bold mt-1 ${textColor}`}>{value}</p>
-        <p className="text-xs text-gray-400 mt-1">{subtext}</p>
+        <p className="text-xs text-muted-foreground/70 mt-1">{subtext}</p>
       </div>
       <div className={`p-3 rounded-full ${color}`}>
         {icon}

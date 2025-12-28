@@ -70,7 +70,7 @@ export default function DeviceDetailPage() {
                 Live Feed
               </h3>
               {/* Pass a mock IP or real one if available */}
-              <VideoPlayer deviceIp="192.168.4.1" /> 
+              <VideoPlayer deviceId={id} /> 
             </div>
 
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">

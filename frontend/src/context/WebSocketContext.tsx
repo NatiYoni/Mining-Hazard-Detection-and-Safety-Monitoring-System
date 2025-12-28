@@ -23,8 +23,12 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const connect = () => {
-    // In production, use env var. For now, hardcode localhost.
-    const wsUrl = 'ws://localhost:8080/api/v1/ws'; 
+    // Determine WS URL based on environment or fallback
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mining-hazard-detection-and-safety.onrender.com/api/v1';
+    // Convert http/https to ws/wss
+    const wsBase = apiUrl.replace(/^http/, 'ws');
+    const wsUrl = `${wsBase.replace('/api/v1', '')}/api/v1/ws`;
+    
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {

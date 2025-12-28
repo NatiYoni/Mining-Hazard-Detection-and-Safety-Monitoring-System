@@ -1,13 +1,53 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { User, Lock, Shield } from 'lucide-react';
+import { User, Lock, Shield, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { SettingsSection } from '@/components/dashboard/SettingsSection';
+import { api } from '@/lib/api';
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+
+    if (newPassword !== confirmPassword) {
+      setMessage({ type: 'error', text: 'New passwords do not match' });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.post('/change-password', {
+        old_password: oldPassword,
+        new_password: newPassword
+      });
+      setMessage({ type: 'success', text: 'Password changed successfully' });
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setMessage({ 
+        type: 'error', 
+        text: err.response?.data?.error || 'Failed to change password' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
@@ -54,12 +94,15 @@ export default function SettingsPage() {
 
         {/* Security Section */}
         <SettingsSection title="Security" icon={Lock}>
-          <form className="space-y-6 max-w-xl">
+          <form onSubmit={handlePasswordChange} className="space-y-6 max-w-xl">
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Current Password</label>
                 <input 
                   type="password" 
+                  required
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
@@ -67,6 +110,9 @@ export default function SettingsPage() {
                 <label className="text-sm font-medium text-foreground">New Password</label>
                 <input 
                   type="password" 
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
@@ -74,15 +120,37 @@ export default function SettingsPage() {
                 <label className="text-sm font-medium text-foreground">Confirm New Password</label>
                 <input 
                   type="password" 
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
             </div>
+
+            {message && (
+              <div className={`p-3 rounded-md text-sm ${
+                message.type === 'success' 
+                  ? 'bg-success/10 text-success border border-success/20' 
+                  : 'bg-destructive/10 text-destructive border border-destructive/20'
+              }`}>
+                {message.text}
+              </div>
+            )}
+
             <button 
-              type="button" 
+              type="submit" 
+              disabled={loading}
               className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
             >
-              Change Password
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Changing...
+                </>
+              ) : (
+                'Change Password'
+              )}
             </button>
           </form>
         </SettingsSection>

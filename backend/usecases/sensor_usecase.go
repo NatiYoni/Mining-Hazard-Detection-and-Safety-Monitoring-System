@@ -75,7 +75,7 @@ func (uc *SensorUseCase) checkHazards(deviceID uuid.UUID, sensorType string, dat
 				alerts = append(alerts, alert)
 			}
 		} else if val > 31 {
-			if alert := uc.createAlert(deviceID, "Heat Stress", "Caution", "High Heat (>31°C). Hydration and rest suggested."); alert != nil {
+			if alert := uc.createAlert(deviceID, "Heat Stress", "Warning", "High Heat (>31°C). Hydration and rest suggested."); alert != nil {
 				alerts = append(alerts, alert)
 			}
 		}

@@ -36,9 +36,9 @@ const routes = [
     roles: ['Admin', 'Supervisor'],
   },
   {
-    label: "Alerts",
+    label: "Alert Center",
     icon: AlertTriangle,
-    href: "/dashboard/alerts",
+    href: "/alerts",
     color: "text-pink-700",
     roles: ['Admin', 'Supervisor', 'Worker'],
   },

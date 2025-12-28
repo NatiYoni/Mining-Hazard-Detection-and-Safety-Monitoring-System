@@ -201,6 +201,15 @@ def simulate_heat_wave():
         "fall": False
     }
 
+def simulate_warning():
+    """Simulates warning temperature"""
+    return {
+        "temp": round(random.uniform(32, 37), 1), # > 31 is Warning
+        "gas": round(random.uniform(200, 400), 1),
+        "vibration": round(random.uniform(0, 50), 1),
+        "fall": False
+    }
+
 def simulate_fall():
     """Simulates a worker fall"""
     return {
@@ -251,12 +260,17 @@ def run_demo():
         send_data(device_id, simulate_normal(), admin_token)
         time.sleep(1)
 
-    print("\n4. HEAT STRESS DETECTED! (5s)")
+    print("\n4. WARNING LEVEL HEAT (5s)")
+    for _ in range(5):
+        send_data(device_id, simulate_warning(), admin_token)
+        time.sleep(1)
+
+    print("\n5. HEAT STRESS DETECTED! (5s)")
     for _ in range(5):
         send_data(device_id, simulate_heat_wave(), admin_token)
         time.sleep(1)
     
-    print("\n5. MAN DOWN! (Single Event)")
+    print("\n6. MAN DOWN! (Single Event)")
     send_video_event(device_id, admin_token) # Send snapshot
     send_data(device_id, simulate_fall(), admin_token)
     

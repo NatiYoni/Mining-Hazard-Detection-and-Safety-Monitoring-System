@@ -31,7 +31,10 @@ export function AlertHistoryTable({ alerts, loading }: AlertHistoryTableProps) {
             {alerts.map((alert) => (
               <tr key={alert.id} className="hover:bg-muted/50 transition-colors">
                 <td className="px-6 py-4 text-foreground">
-                  {new Date(alert.timestamp).toLocaleString()}
+                  {(() => {
+                    const date = new Date(alert.timestamp);
+                    return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleString();
+                  })()}
                 </td>
                 <td className="px-6 py-4 font-medium text-foreground">{alert.device_id}</td>
                 <td className="px-6 py-4">
@@ -40,7 +43,7 @@ export function AlertHistoryTable({ alerts, loading }: AlertHistoryTableProps) {
                 <td className="px-6 py-4 text-muted-foreground">{alert.message}</td>
                 <td className="px-6 py-4">
                   <span className={`text-xs font-medium ${alert.acknowledged ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                    {alert.acknowledged ? 'Resolved' : 'Active'}
+                    {alert.acknowledged ? 'Resolved' : 'Unresolved'}
                   </span>
                 </td>
               </tr>

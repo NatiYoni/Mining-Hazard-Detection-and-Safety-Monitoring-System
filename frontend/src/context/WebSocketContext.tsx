@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { WebSocketMessage, DeviceStatus, Alert, SensorPayload } from '../types';
+import { api } from '@/lib/api';
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -110,6 +111,34 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     connect();
+
+    // Fetch initial devices
+    const fetchDevices = async () => {
+      try {
+        const res = await api.get('/devices');
+        if (Array.isArray(res.data)) {
+          setDevices(prev => {
+            const newMap = new Map(prev);
+            res.data.forEach((d: any) => {
+              // Merge with existing or add new
+              if (!newMap.has(d.id)) {
+                newMap.set(d.id, {
+                  device_id: d.id,
+                  status: 'Safe', // Default, will be updated by WS
+                  is_online: false, // Assume offline until WS update
+                  last_seen: d.created_at || new Date().toISOString(),
+                  current_readings: {}
+                });
+              }
+            });
+            return newMap;
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch initial devices:', err);
+      }
+    };
+    fetchDevices();
 
     // Heartbeat check for offline devices
     const heartbeatInterval = setInterval(() => {

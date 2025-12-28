@@ -25,24 +25,22 @@ func main() {
 	sensorRepo := database.NewSensorRepo(database.DB)
 	alertRepo := database.NewAlertRepo(database.DB)
 	userRepo := database.NewUserRepo(database.DB)
-	imageRepo := database.NewImageRepo(database.DB)
 
 	// Initialize Use Cases
 	deviceUseCase := usecases.NewDeviceUseCase(deviceRepo)
 	sensorUseCase := usecases.NewSensorUseCase(sensorRepo, alertRepo)
 	alertUseCase := usecases.NewAlertUseCase(alertRepo)
 	userUseCase := usecases.NewUserUseCase(userRepo)
-	imageUseCase := usecases.NewImageUseCase(imageRepo)
 
 	// Initialize Controllers
 	deviceController := controllers.NewDeviceController(deviceUseCase)
 	sensorController := controllers.NewSensorController(sensorUseCase, hub)
 	alertController := controllers.NewAlertController(alertUseCase)
 	userController := controllers.NewUserController(userUseCase, cfg.JWTSecret)
-	imageController := controllers.NewImageController(imageUseCase, hub)
+	videoController := controllers.NewVideoController(hub)
 
 	// Setup Router
-	r := router.SetupRouter(sensorController, deviceController, alertController, userController, imageController, cfg.JWTSecret)
+	r := router.SetupRouter(sensorController, deviceController, alertController, userController, videoController, cfg.JWTSecret)
 
 	// Run Server
 	// Note: Render requires the server to bind to 0.0.0.0 (which Gin does by default with Run())

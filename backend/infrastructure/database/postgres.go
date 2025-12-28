@@ -49,7 +49,6 @@ func ConnectDB(cfg *config.Config) {
 		&entities.Device{},
 		&entities.SensorReading{},
 		&entities.Alert{},
-		&entities.Image{},
 	)
 	if err != nil {
 		log.Printf("Warning: Database migration encountered an issue: %v. Continuing application startup...", err)

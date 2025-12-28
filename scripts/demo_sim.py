@@ -146,7 +146,12 @@ def stream_video(device_id, token):
                     "image_url": image_data
                 }
                 # Send to stream endpoint
-                session.post(STREAM_URL, json=payload, headers=headers)
+                try:
+                    resp = session.post(STREAM_URL, json=payload, headers=headers)
+                    if resp.status_code != 200:
+                        print(f"Stream Error: {resp.status_code} - {resp.text}")
+                except Exception as e:
+                    print(f"Stream Connection Error: {e}")
             
             # Target ~15-20 FPS (0.05s)
             time.sleep(0.05)
@@ -158,50 +163,9 @@ def stream_video(device_id, token):
 
 def send_video_event(device_id, token):
     """Simulates sending a video/image capture during an event."""
-    global LATEST_FRAME
-    print("Uploading event snapshot...")
-    
-    image_data = None
-    
-    # Try to get the latest frame from the stream thread
-    with FRAME_LOCK:
-        if LATEST_FRAME:
-            image_data = LATEST_FRAME
-    
-    # Fallback if stream is not running or hasn't captured yet
-    if not image_data:
-        if CV2_AVAILABLE:
-             # Try to capture one frame manually (might fail if stream holds camera)
-             try:
-                cap = cv2.VideoCapture(0)
-                if cap.isOpened():
-                    ret, frame = cap.read()
-                    cap.release()
-                    if ret:
-                        frame = cv2.resize(frame, (640, 480))
-                        _, buffer = cv2.imencode('.jpg', frame)
-                        jpg_as_text = base64.b64encode(buffer).decode('utf-8')
-                        image_data = f"data:image/jpeg;base64,{jpg_as_text}"
-             except:
-                 pass
-
-    if not image_data:
-        print("Using placeholder image.")
-        image_data = "https://placehold.co/600x400/red/white?text=HAZARD+DETECTED"
-
-    headers = {"Authorization": f"Bearer {token}"}
-    payload = {
-        "device_id": device_id,
-        "image_url": image_data
-    }
-    try:
-        response = requests.post(IMAGES_URL, json=payload, headers=headers)
-        if response.status_code == 201:
-            print("Snapshot uploaded successfully.")
-        else:
-            print(f"Failed to upload snapshot: {response.status_code}")
-    except Exception as e:
-        print(f"Error uploading snapshot: {e}")
+    print("Event detected! (Video stream is active)")
+    # Snapshot upload removed as per "Video Only" requirement
+    pass
 
 def send_data(device_id, data, token):
     payload = {

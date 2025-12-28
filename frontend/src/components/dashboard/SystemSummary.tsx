@@ -10,11 +10,8 @@ export const SystemSummary = () => {
 
   const total = deviceList.length;
   
-  // Online logic: seen in last 60 seconds
-  const now = new Date().getTime();
-  const online = deviceList.filter(d => 
-    now - new Date(d.last_seen).getTime() < 60000
-  ).length;
+  // Online logic: use the is_online flag managed by WebSocketContext
+  const online = deviceList.filter(d => d.is_online).length;
 
   const critical = deviceList.filter(d => d.status === 'Critical').length;
   const warning = deviceList.filter(d => d.status === 'Warning').length;

@@ -14,6 +14,7 @@ export const DeviceHeader = ({ device }: { device: DeviceStatus }) => {
     Safe: 'bg-success/10 text-success border-success/20',
     Warning: 'bg-warning/10 text-warning border-warning/20',
     Critical: 'bg-destructive/10 text-destructive border-destructive/20 animate-pulse',
+    Offline: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
   };
 
   return (
@@ -36,8 +37,8 @@ export const DeviceHeader = ({ device }: { device: DeviceStatus }) => {
                 <h1 className="text-2xl font-bold text-foreground">
                   Device: {device.device_id.slice(0, 8)}
                 </h1>
-                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${statusColors[device.status]}`}>
-                  {device.status.toUpperCase()}
+                <span className={`px-3 py-1 rounded-full text-sm font-bold border ${device.is_online ? statusColors[device.status] : statusColors['Offline']}`}>
+                  {device.is_online ? device.status.toUpperCase() : 'OFFLINE'}
                 </span>
               </div>
               

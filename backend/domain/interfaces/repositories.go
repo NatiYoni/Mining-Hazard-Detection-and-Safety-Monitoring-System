@@ -30,9 +30,3 @@ type UserRepository interface {
 	FindByUsername(username string) (*entities.User, error)
 	Update(user *entities.User) error
 }
-
-type ImageRepository interface {
-	Create(image *entities.Image) error
-	FindByID(id uuid.UUID) (*entities.Image, error)
-	GetLatestByDeviceID(deviceID uuid.UUID) (*entities.Image, error)
-}

@@ -117,6 +117,7 @@ const DeviceRow = ({ device }: { device: DeviceStatus }) => {
     Safe: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
     Warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
     Critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 animate-pulse',
+    Offline: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
   };
 
   const isFall = device.current_readings?.fall;
@@ -127,8 +128,8 @@ const DeviceRow = ({ device }: { device: DeviceStatus }) => {
         {device.device_id.slice(0, 8)}...
       </td>
       <td className="p-4">
-        <span className={`px-2 py-1 rounded-full text-xs font-bold ${statusColors[device.status]}`}>
-          {device.status.toUpperCase()}
+        <span className={`px-2 py-1 rounded-full text-xs font-bold ${device.is_online ? statusColors[device.status] : statusColors['Offline']}`}>
+          {device.is_online ? device.status.toUpperCase() : 'OFFLINE'}
         </span>
       </td>
       <td className="p-4 font-medium text-foreground">

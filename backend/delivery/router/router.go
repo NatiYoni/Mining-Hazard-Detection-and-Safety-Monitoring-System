@@ -14,7 +14,7 @@ func SetupRouter(
 	deviceController *controllers.DeviceController,
 	alertController *controllers.AlertController,
 	userController *controllers.UserController,
-	imageController *controllers.ImageController,
+	videoController *controllers.VideoController,
 	jwtSecret string,
 ) *gin.Engine {
 	r := gin.Default()
@@ -63,11 +63,8 @@ func SetupRouter(
 		// User
 		protected.POST("/change-password", userController.ChangePassword)
 
-		// Images
-		protected.POST("/images", imageController.UploadImage)
-		protected.POST("/images/stream", imageController.StreamFrame)
-		protected.GET("/images/:id", imageController.GetImage)
-		protected.GET("/images/latest", imageController.GetLatest)
+		// Video Stream
+		protected.POST("/images/stream", videoController.StreamFrame)
 	}
 
 	return r

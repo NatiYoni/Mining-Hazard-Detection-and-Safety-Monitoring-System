@@ -110,9 +110,33 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     connect();
+
+    // Heartbeat check for offline devices
+    const heartbeatInterval = setInterval(() => {
+      setDevices((prev) => {
+        const newMap = new Map(prev);
+        let hasChanges = false;
+        const now = new Date().getTime();
+
+        newMap.forEach((device, id) => {
+          if (device.is_online && device.last_seen) {
+            const lastSeenTime = new Date(device.last_seen).getTime();
+            // If no data for 10 seconds, mark as offline
+            if (now - lastSeenTime > 10000) {
+              newMap.set(id, { ...device, is_online: false });
+              hasChanges = true;
+            }
+          }
+        });
+
+        return hasChanges ? newMap : prev;
+      });
+    }, 5000); // Check every 5 seconds
+
     return () => {
       ws.current?.close();
       if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+      clearInterval(heartbeatInterval);
     };
   }, []);
 

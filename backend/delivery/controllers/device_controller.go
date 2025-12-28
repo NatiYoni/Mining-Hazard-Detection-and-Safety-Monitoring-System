@@ -17,8 +17,9 @@ func NewDeviceController(uc *usecases.DeviceUseCase) *DeviceController {
 }
 
 type CreateDeviceInput struct {
-	DeviceName string `json:"device_name" binding:"required"`
-	Location   string `json:"location"`
+	DeviceName   string `json:"device_name" binding:"required"`
+	Location     string `json:"location"`
+	SupervisorID string `json:"supervisor_id"` // Optional UUID string
 }
 
 func (c *DeviceController) CreateDevice(ctx *gin.Context) {
@@ -28,7 +29,17 @@ func (c *DeviceController) CreateDevice(ctx *gin.Context) {
 		return
 	}
 
-	device, err := c.DeviceUseCase.RegisterDevice(input.DeviceName, input.Location)
+	var supervisorID *uuid.UUID
+	if input.SupervisorID != "" {
+		id, err := uuid.Parse(input.SupervisorID)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid supervisor ID"})
+			return
+		}
+		supervisorID = &id
+	}
+
+	device, err := c.DeviceUseCase.RegisterDevice(input.DeviceName, input.Location, supervisorID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create device"})
 		return

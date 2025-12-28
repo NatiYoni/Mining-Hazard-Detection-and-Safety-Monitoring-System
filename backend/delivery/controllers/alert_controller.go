@@ -16,6 +16,22 @@ func NewAlertController(uc *usecases.AlertUseCase) *AlertController {
 }
 
 func (c *AlertController) GetAllAlerts(ctx *gin.Context) {
+	deviceIDStr := ctx.Query("device_id")
+	if deviceIDStr != "" {
+		deviceID, err := uuid.Parse(deviceIDStr)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID"})
+			return
+		}
+		alerts, err := c.AlertUseCase.GetAlertsByDevice(deviceID)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch alerts for device"})
+			return
+		}
+		ctx.JSON(http.StatusOK, alerts)
+		return
+	}
+
 	alerts, err := c.AlertUseCase.GetAllAlerts()
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch alerts"})

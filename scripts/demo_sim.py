@@ -8,29 +8,123 @@ import sys
 
 # Configuration
 # Default to localhost, but allow override via env var or arg
-DEFAULT_URL = "http://localhost:8080/api/v1/sensor-data"
-API_URL = os.getenv("API_URL", DEFAULT_URL)
+DEFAULT_BASE_URL = "http://localhost:8080"
+BASE_URL = os.getenv("API_URL", DEFAULT_BASE_URL).rstrip('/')
 
 if len(sys.argv) > 1:
-    API_URL = sys.argv[1]
+    BASE_URL = sys.argv[1].rstrip('/')
 
-print(f"Targeting API: {API_URL}")
+print(f"Targeting API Base: {BASE_URL}")
 
-DEVICE_ID = str(uuid.uuid4()) # Generate a random device ID for this session
-# Or use a fixed one if you want to track the same device
-# DEVICE_ID = "550e8400-e29b-41d4-a716-446655440000"
+SENSOR_DATA_URL = f"{BASE_URL}/api/v1/sensor-data"
+LOGIN_URL = f"{BASE_URL}/api/v1/login"
+REGISTER_URL = f"{BASE_URL}/api/v1/register"
+DEVICES_URL = f"{BASE_URL}/api/v1/devices"
+IMAGES_URL = f"{BASE_URL}/api/v1/images"
 
-print(f"Simulating Device: {DEVICE_ID}")
+# Demo User Credentials
+ADMIN_USERNAME = "demo_admin"
+ADMIN_PASSWORD = "password123"
 
-def send_data(data):
+SUPERVISOR_USERNAME = "demo_supervisor"
+SUPERVISOR_PASSWORD = "password123"
+
+def get_auth_token(username, password, role="User"):
+    """Authenticates the user and returns the JWT token and User ID."""
+    print(f"Authenticating as {username}...")
+    
+    # Try to login first
+    try:
+        login_payload = {"username": username, "password": password}
+        response = requests.post(LOGIN_URL, json=login_payload)
+        
+        if response.status_code == 200:
+            print("Login successful.")
+            data = response.json()
+            return data.get("token"), data.get("user", {}).get("id")
+        elif response.status_code == 400 or response.status_code == 404 or response.status_code == 401:
+             # If login fails, try to register
+            print("Login failed, attempting registration...")
+            register_payload = {"username": username, "password": password, "role": role}
+            reg_response = requests.post(REGISTER_URL, json=register_payload)
+            
+            if reg_response.status_code == 200 or reg_response.status_code == 201:
+                print("Registration successful. Logging in...")
+                # Login again to get token
+                response = requests.post(LOGIN_URL, json=login_payload)
+                if response.status_code == 200:
+                     data = response.json()
+                     return data.get("token"), data.get("user", {}).get("id")
+            else:
+                print(f"Registration failed: {reg_response.text}")
+        else:
+            print(f"Login failed with unexpected status: {response.status_code} - {response.text}")
+
+    except Exception as e:
+        print(f"Authentication error: {e}")
+    
+    return None, None
+
+def create_device(token, supervisor_id=None):
+    """Creates a new device to ensure valid Device ID."""
+    print("Creating a new simulated device...")
+    headers = {"Authorization": f"Bearer {token}"}
     payload = {
-        "device_id": DEVICE_ID,
+        "device_name": f"Simulated Device {uuid.uuid4().hex[:8]}",
+        "location": "Simulation Script"
+    }
+    if supervisor_id:
+        payload["supervisor_id"] = supervisor_id
+        print(f"Assigning to Supervisor ID: {supervisor_id}")
+
+    try:
+        response = requests.post(DEVICES_URL, json=payload, headers=headers)
+        if response.status_code == 201:
+            device_id = response.json().get("id")
+            print(f"Device created successfully: {device_id}")
+            return device_id
+        else:
+            print(f"Failed to create device: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"Error creating device: {e}")
+    return None
+
+def send_video_event(device_id, token):
+    """Simulates sending a video/image capture during an event."""
+    print("Uploading event snapshot (simulated video frame)...")
+    headers = {"Authorization": f"Bearer {token}"}
+    # Use a placeholder image URL
+    payload = {
+        "device_id": device_id,
+        "image_url": "https://placehold.co/600x400/red/white?text=HAZARD+DETECTED"
+    }
+    try:
+        response = requests.post(IMAGES_URL, json=payload, headers=headers)
+        if response.status_code == 201:
+            print("Snapshot uploaded successfully.")
+        else:
+            print(f"Failed to upload snapshot: {response.status_code}")
+    except Exception as e:
+        print(f"Error uploading snapshot: {e}")
+
+def send_data(device_id, data, token):
+    payload = {
+        "device_id": device_id,
         "sensor_type": "telemetry",
         "payload": data
     }
+    headers = {}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+        
     try:
-        response = requests.post(API_URL, json=payload)
-        print(f"Sent: {data} | Status: {response.status_code}")
+        response = requests.post(SENSOR_DATA_URL, json=payload, headers=headers)
+        if response.status_code == 401:
+             print("Error: 401 Unauthorized. Token might be invalid or expired.")
+        elif response.status_code == 500:
+             print(f"Error: 500 Internal Server Error. Check backend logs. Data: {data}")
+        else:
+             print(f"Sent: {data} | Status: {response.status_code}")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -71,29 +165,54 @@ def simulate_fall():
     }
 
 def run_demo():
-    print("Starting Simulation...")
+    # 1. Get Supervisor ID (Create if needed)
+    print("--- Setup: Supervisor ---")
+    _, supervisor_id = get_auth_token(SUPERVISOR_USERNAME, SUPERVISOR_PASSWORD, "Supervisor")
+    if not supervisor_id:
+        print("Failed to get Supervisor ID.")
+        return
+
+    # 2. Get Admin Token (to create device)
+    print("\n--- Setup: Admin ---")
+    admin_token, _ = get_auth_token(ADMIN_USERNAME, ADMIN_PASSWORD, "Admin")
+    if not admin_token:
+        print("Failed to get Admin Token.")
+        return
+
+    # 3. Create Device assigned to Supervisor
+    device_id = create_device(admin_token, supervisor_id)
+    if not device_id:
+        print("WARNING: Could not create device. Using random UUID (Expect 500 Error).")
+        device_id = str(uuid.uuid4())
+
+    print(f"\nSimulating Device: {device_id}")
+    print(f"Assigned to Supervisor: {supervisor_id}")
+    
+    print("\nStarting Simulation...")
     print("1. Normal Operation (10s)")
     for _ in range(10):
-        send_data(simulate_normal())
+        send_data(device_id, simulate_normal(), admin_token)
         time.sleep(1)
 
     print("\n2. GAS LEAK DETECTED! (5s)")
+    send_video_event(device_id, admin_token) # Send snapshot at start of event
     for _ in range(5):
-        send_data(simulate_gas_leak())
+        send_data(device_id, simulate_gas_leak(), admin_token)
         time.sleep(1)
 
     print("\n3. Returning to Normal (5s)")
     for _ in range(5):
-        send_data(simulate_normal())
+        send_data(device_id, simulate_normal(), admin_token)
         time.sleep(1)
 
     print("\n4. HEAT STRESS DETECTED! (5s)")
     for _ in range(5):
-        send_data(simulate_heat_wave())
+        send_data(device_id, simulate_heat_wave(), admin_token)
         time.sleep(1)
     
     print("\n5. MAN DOWN! (Single Event)")
-    send_data(simulate_fall())
+    send_video_event(device_id, admin_token) # Send snapshot
+    send_data(device_id, simulate_fall(), admin_token)
     
     print("\nSimulation Complete.")
 

@@ -18,12 +18,15 @@ export default function StreamPage() {
   // Auto-select from URL or default to first online device
   useEffect(() => {
     const paramId = searchParams.get('device');
-    if (paramId && devices.has(paramId)) {
+    // If URL has a device ID, use it (even if offline, so user knows why it's not playing)
+    if (paramId) {
       setSelectedDeviceId(paramId);
-    } else if (!selectedDeviceId && deviceList.length > 0) {
+    } 
+    // Otherwise, if no device selected yet, pick the first online one
+    else if (!selectedDeviceId && deviceList.length > 0) {
       setSelectedDeviceId(deviceList[0].device_id);
     }
-  }, [searchParams, devices, deviceList, selectedDeviceId]);
+  }, [searchParams, deviceList, selectedDeviceId]);
 
   const selectedDevice = devices.get(selectedDeviceId);
 
@@ -33,7 +36,7 @@ export default function StreamPage() {
       
       {/* Device Selector */}
       <div className="max-w-md">
-        <label className="block text-sm font-medium text-muted-foreground mb-2">Select Device</label>
+        <label className="block text-sm font-medium text-muted-foreground mb-2">Select Online Device</label>
         <select 
           className="w-full p-2 border border-input rounded-md bg-background shadow-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
           value={selectedDeviceId}
@@ -45,6 +48,12 @@ export default function StreamPage() {
               {d.device_id} ({d.status})
             </option>
           ))}
+          {/* If selected device is offline/not in list, show it as disabled option so dropdown isn't empty/confusing */}
+          {selectedDeviceId && !deviceList.find(d => d.device_id === selectedDeviceId) && (
+            <option value={selectedDeviceId} disabled>
+              {selectedDeviceId} (Offline)
+            </option>
+          )}
         </select>
       </div>
 

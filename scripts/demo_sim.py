@@ -5,6 +5,14 @@ import json
 import uuid
 import os
 import sys
+import base64
+
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    CV2_AVAILABLE = False
+    print("Warning: 'opencv-python' not installed. Video features will use placeholders.")
 
 # Configuration
 # Default to localhost, but allow override via env var or arg
@@ -89,14 +97,52 @@ def create_device(token, supervisor_id=None):
         print(f"Error creating device: {e}")
     return None
 
+def capture_webcam_frame():
+    """Captures a frame from the webcam and returns it as a Base64 string."""
+    if not CV2_AVAILABLE:
+        return None
+    
+    # Open default camera
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Error: Could not open webcam.")
+        return None
+    
+    # Warm up camera (skip a few frames)
+    for _ in range(5):
+        cap.read()
+
+    ret, frame = cap.read()
+    cap.release()
+    
+    if not ret:
+        print("Error: Could not read frame.")
+        return None
+    
+    # Resize to reduce payload size (e.g., 640x480)
+    frame = cv2.resize(frame, (640, 480))
+    
+    # Encode to JPEG
+    _, buffer = cv2.imencode('.jpg', frame)
+    
+    # Convert to Base64
+    jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+    return f"data:image/jpeg;base64,{jpg_as_text}"
+
 def send_video_event(device_id, token):
     """Simulates sending a video/image capture during an event."""
-    print("Uploading event snapshot (simulated video frame)...")
+    print("Uploading event snapshot...")
+    
+    image_data = capture_webcam_frame()
+    
+    if not image_data:
+        print("Using placeholder image.")
+        image_data = "https://placehold.co/600x400/red/white?text=HAZARD+DETECTED"
+
     headers = {"Authorization": f"Bearer {token}"}
-    # Use a placeholder image URL
     payload = {
         "device_id": device_id,
-        "image_url": "https://placehold.co/600x400/red/white?text=HAZARD+DETECTED"
+        "image_url": image_data
     }
     try:
         response = requests.post(IMAGES_URL, json=payload, headers=headers)

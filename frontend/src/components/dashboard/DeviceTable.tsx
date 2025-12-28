@@ -34,8 +34,8 @@ export const DeviceTable = ({ timeRange = '1d' }: DeviceTableProps) => {
     const diff = now - lastSeen;
 
     if (timeRange === 'now') {
-      // Consider "now" as active in the last 30 seconds or explicitly Online
-      return device.is_online && diff < 30000;
+      // Consider "now" as explicitly Online (managed by heartbeat)
+      return device.is_online;
     }
 
     const ranges: { [key: string]: number } = {

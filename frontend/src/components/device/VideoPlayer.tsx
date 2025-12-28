@@ -1,107 +1,80 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { VideoOff, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface VideoPlayerProps {
-  deviceIp?: string; // In a real app, we'd get this from the backend
+  deviceId?: string;
   fallbackUrl?: string;
 }
 
-export const VideoPlayer = ({ deviceIp }: VideoPlayerProps) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+export const VideoPlayer = ({ deviceId }: VideoPlayerProps) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
-    // If no IP provided, we can't connect
-    if (!deviceIp) return;
+    if (!deviceId) return;
 
-    // Connect to ESP32-CAM WebSocket
-    // Assuming the device is reachable at ws://<IP>:81/stream
-    const wsUrl = `ws://${deviceIp}:81/stream`;
-    
-    console.log('Connecting to video stream:', wsUrl);
-    
-    try {
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-      ws.binaryType = 'blob';
-
-      ws.onopen = () => {
-        setIsConnected(true);
-        setError(false);
-      };
-
-      ws.onmessage = (event) => {
-        if (imgRef.current) {
-          const url = URL.createObjectURL(event.data);
-          imgRef.current.src = url;
-          
-          // Clean up old object URL to prevent memory leaks
-          imgRef.current.onload = () => {
-            URL.revokeObjectURL(url);
-          };
+    const fetchLatestImage = async () => {
+      try {
+        const res = await api.get(`/images/latest?device_id=${deviceId}`);
+        if (res.data && res.data.image_url) {
+          setImageUrl(res.data.image_url);
+          setLastUpdated(new Date(res.data.created_at));
         }
-      };
+      } catch (err) {
+        // Silent fail for polling
+      }
+    };
 
-      ws.onclose = () => {
-        setIsConnected(false);
-      };
+    // Initial fetch
+    fetchLatestImage();
 
-      ws.onerror = () => {
-        setError(true);
-        setIsConnected(false);
-      };
+    // Poll every 2 seconds
+    const interval = setInterval(fetchLatestImage, 2000);
 
-      return () => {
-        ws.close();
-      };
-    } catch (e) {
-      setError(true);
-    }
-  }, [deviceIp]);
+    return () => clearInterval(interval);
+  }, [deviceId]);
 
-  if (!deviceIp) {
+  if (!deviceId) {
     return (
-      <div className="aspect-video bg-gray-900 rounded-xl flex flex-col items-center justify-center text-gray-500">
-        <VideoOff className="h-12 w-12 mb-2" />
-        <p>No Video Source</p>
+      <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center text-muted-foreground">
+        <VideoOff className="h-12 w-12 mb-2 opacity-50" />
+        <p>Select a device to view stream</p>
       </div>
     );
   }
 
   return (
-    <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-lg border border-border">
-      {/* Status Overlay */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-        <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-red-600 animate-pulse' : 'bg-gray-500'}`} />
-        <span className="text-xs font-mono text-white bg-black/50 px-2 py-1 rounded">
-          {isConnected ? 'LIVE' : 'OFFLINE'}
-        </span>
-      </div>
-
-      {/* Video Feed */}
-      <img 
-        ref={imgRef} 
-        alt="Live Stream" 
-        className="w-full h-full object-contain"
-      />
-
-      {/* Loading / Error States */}
-      {!isConnected && !error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 text-white">
-          <Loader2 className="h-8 w-8 animate-spin mr-2" />
-          <span>Connecting to Camera...</span>
+    <div className="relative aspect-video bg-black rounded-lg overflow-hidden group">
+      {imageUrl ? (
+        <img 
+          src={imageUrl} 
+          alt="Live Feed" 
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-muted">
+          {loading ? (
+            <Loader2 className="h-8 w-8 animate-spin mb-2" />
+          ) : (
+            <VideoOff className="h-12 w-12 mb-2 opacity-50" />
+          )}
+          <p>{loading ? 'Connecting...' : 'No signal'}</p>
         </div>
       )}
 
-      {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-gray-400">
-          <VideoOff className="h-10 w-10 mb-2" />
-          <p>Connection Failed</p>
-          <p className="text-xs mt-1">Check if camera is online</p>
+      {/* Overlay Info */}
+      <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium text-white flex items-center gap-2">
+        <div className={`w-2 h-2 rounded-full ${imageUrl ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+        {imageUrl ? 'LIVE' : 'OFFLINE'}
+      </div>
+
+      {lastUpdated && (
+        <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-md text-xs text-white/80">
+          Last update: {lastUpdated.toLocaleTimeString()}
         </div>
       )}
     </div>

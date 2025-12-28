@@ -38,8 +38,7 @@ export default function StreamPage() {
         <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
           <h2 className="text-lg font-semibold mb-4 text-foreground">Live Feed</h2>
           {selectedDeviceId ? (
-             // Using a placeholder IP since it's not in the device object yet
-             <VideoPlayer deviceIp="192.168.4.1" /> 
+             <VideoPlayer deviceId={selectedDeviceId} /> 
           ) : (
             <div className="aspect-video bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
               Select a device to view stream

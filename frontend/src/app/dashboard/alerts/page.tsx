@@ -5,6 +5,7 @@ import { Alert } from '@/types';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { HighRiskDevices } from '@/components/dashboard/HighRiskDevices';
 import { AlertHistoryTable } from '@/components/dashboard/AlertHistoryTable';
+import { api } from '@/lib/api';
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -13,16 +14,8 @@ export default function AlertsPage() {
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:8080/api/v1/alerts', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setAlerts(data || []);
-        }
+        const res = await api.get('/alerts');
+        setAlerts(res.data || []);
       } catch (error) {
         console.error('Failed to fetch alerts', error);
       } finally {

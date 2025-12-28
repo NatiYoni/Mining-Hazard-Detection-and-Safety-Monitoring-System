@@ -16,7 +16,7 @@ export const AlertsPanel = ({ timeRange = '1d' }: { timeRange?: string }) => {
     const diff = now - lastSeen;
 
     if (timeRange === 'now') {
-      return device.status !== 'Offline' && diff < 30000;
+      return device.is_online && diff < 30000;
     }
 
     const ranges: { [key: string]: number } = {

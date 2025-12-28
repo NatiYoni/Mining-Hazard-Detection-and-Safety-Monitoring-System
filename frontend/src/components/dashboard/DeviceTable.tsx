@@ -35,7 +35,7 @@ export const DeviceTable = ({ timeRange = '1d' }: DeviceTableProps) => {
 
     if (timeRange === 'now') {
       // Consider "now" as active in the last 30 seconds or explicitly Online
-      return device.status !== 'Offline' && diff < 30000;
+      return device.is_online && diff < 30000;
     }
 
     const ranges: { [key: string]: number } = {

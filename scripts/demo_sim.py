@@ -8,6 +8,10 @@ import sys
 import base64
 import threading
 
+# Global state for video frame sharing
+LATEST_FRAME = None
+FRAME_LOCK = threading.Lock()
+
 try:
     import cv2
     CV2_AVAILABLE = True
@@ -99,80 +103,87 @@ def create_device(token, supervisor_id=None):
         print(f"Error creating device: {e}")
     return None
 
-def capture_webcam_frame():
-    """Captures a frame from the webcam and returns it as a Base64 string."""
-    if not CV2_AVAILABLE:
-        return None
-    
-    # Open default camera
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        print("Error: Could not open webcam.")
-        return None
-    
-    # Warm up camera (skip a few frames)
-    # for _ in range(5):
-    #     cap.read()
-
-    ret, frame = cap.read()
-    cap.release()
-    
-    if not ret:
-        print("Error: Could not read frame.")
-        return None
-    
-    # Resize to reduce payload size (e.g., 320x240 for stream)
-    frame = cv2.resize(frame, (320, 240))
-    
-    # Encode to JPEG with lower quality for speed
-    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 50]
-    _, buffer = cv2.imencode('.jpg', frame, encode_param)
-    
-    # Convert to Base64
-    jpg_as_text = base64.b64encode(buffer).decode('utf-8')
-    return f"data:image/jpeg;base64,{jpg_as_text}"
-
 def stream_video(device_id, token):
     """Continuously streams video frames to the backend."""
+    global LATEST_FRAME
     print("Starting video stream thread...")
     headers = {"Authorization": f"Bearer {token}"}
+    session = requests.Session()
     
+    if not CV2_AVAILABLE:
+        print("OpenCV not available, skipping stream.")
+        return
+
+    # Open camera ONCE and keep it open
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Error: Could not open webcam for streaming.")
+        return
+
+    print("Webcam opened successfully. Streaming started.")
+
     while True:
         try:
-            image_data = capture_webcam_frame()
-            if image_data:
+            ret, frame = cap.read()
+            if ret:
+                # Resize for performance (480x360 is decent for demo)
+                frame = cv2.resize(frame, (480, 360))
+                
+                # Encode to JPEG
+                encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 60]
+                _, buffer = cv2.imencode('.jpg', frame, encode_param)
+                
+                # Convert to Base64
+                jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+                image_data = f"data:image/jpeg;base64,{jpg_as_text}"
+                
+                # Update global frame for event snapshots
+                with FRAME_LOCK:
+                    LATEST_FRAME = image_data
+
                 payload = {
                     "device_id": device_id,
                     "image_url": image_data
                 }
-                # Use the stream endpoint to avoid filling DB
-                requests.post(STREAM_URL, json=payload, headers=headers)
+                # Send to stream endpoint
+                session.post(STREAM_URL, json=payload, headers=headers)
             
-            # 2 FPS
-            time.sleep(0.5)
+            # Target ~15-20 FPS (0.05s)
+            time.sleep(0.05)
         except Exception as e:
             print(f"Stream error: {e}")
             time.sleep(1)
 
+    cap.release()
+
 def send_video_event(device_id, token):
     """Simulates sending a video/image capture during an event."""
-    # Now that we stream, this might be redundant, or we can use it to save a high-res snapshot to DB
-    print("Uploading event snapshot (High Res)...")
+    global LATEST_FRAME
+    print("Uploading event snapshot...")
     
-    # Capture high res for event
-    if CV2_AVAILABLE:
-        cap = cv2.VideoCapture(0)
-        ret, frame = cap.read()
-        cap.release()
-        if ret:
-            frame = cv2.resize(frame, (640, 480))
-            _, buffer = cv2.imencode('.jpg', frame)
-            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
-            image_data = f"data:image/jpeg;base64,{jpg_as_text}"
-        else:
-            image_data = None
-    else:
-        image_data = None
+    image_data = None
+    
+    # Try to get the latest frame from the stream thread
+    with FRAME_LOCK:
+        if LATEST_FRAME:
+            image_data = LATEST_FRAME
+    
+    # Fallback if stream is not running or hasn't captured yet
+    if not image_data:
+        if CV2_AVAILABLE:
+             # Try to capture one frame manually (might fail if stream holds camera)
+             try:
+                cap = cv2.VideoCapture(0)
+                if cap.isOpened():
+                    ret, frame = cap.read()
+                    cap.release()
+                    if ret:
+                        frame = cv2.resize(frame, (640, 480))
+                        _, buffer = cv2.imencode('.jpg', frame)
+                        jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+                        image_data = f"data:image/jpeg;base64,{jpg_as_text}"
+             except:
+                 pass
 
     if not image_data:
         print("Using placeholder image.")

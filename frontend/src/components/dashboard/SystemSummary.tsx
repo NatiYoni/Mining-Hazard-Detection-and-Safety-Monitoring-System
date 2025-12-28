@@ -11,13 +11,15 @@ export const SystemSummary = () => {
   const total = deviceList.length;
   
   // Online logic: use the is_online flag managed by WebSocketContext
-  const online = deviceList.filter(d => d.is_online).length;
+  const onlineDevices = deviceList.filter(d => d.is_online);
+  const onlineCount = onlineDevices.length;
 
-  const critical = deviceList.filter(d => d.status === 'Critical').length;
-  const warning = deviceList.filter(d => d.status === 'Warning').length;
+  // Safety stats should only reflect ONLINE devices
+  const critical = onlineDevices.filter(d => d.status === 'Critical').length;
+  const warning = onlineDevices.filter(d => d.status === 'Warning').length;
 
   // Avg Temp (only from online devices with temp readings)
-  const temps = deviceList
+  const temps = onlineDevices
     .map(d => d.current_readings?.temp)
     .filter((t): t is number => typeof t === 'number');
   
@@ -29,7 +31,7 @@ export const SystemSummary = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <SummaryCard
         title="Total Devices"
-        value={`${online} / ${total}`}
+        value={`${onlineCount} / ${total}`}
         subtext="Online Now"
         icon={<Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
         color="bg-blue-50 dark:bg-blue-900/20"

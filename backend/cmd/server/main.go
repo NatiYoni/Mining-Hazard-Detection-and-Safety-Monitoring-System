@@ -39,7 +39,7 @@ func main() {
 	sensorController := controllers.NewSensorController(sensorUseCase, hub)
 	alertController := controllers.NewAlertController(alertUseCase)
 	userController := controllers.NewUserController(userUseCase, cfg.JWTSecret)
-	imageController := controllers.NewImageController(imageUseCase)
+	imageController := controllers.NewImageController(imageUseCase, hub)
 
 	// Setup Router
 	r := router.SetupRouter(sensorController, deviceController, alertController, userController, imageController, cfg.JWTSecret)

@@ -8,6 +8,7 @@ interface WebSocketContextType {
   lastMessage: WebSocketMessage | null;
   devices: Map<string, DeviceStatus>;
   alerts: Alert[];
+  latestImages: Map<string, string>; // Map<deviceId, imageUrl>
   sendMessage: (msg: any) => void;
 }
 
@@ -18,6 +19,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const [devices, setDevices] = useState<Map<string, DeviceStatus>>(new Map());
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [latestImages, setLatestImages] = useState<Map<string, string>>(new Map());
   
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -61,7 +63,16 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleMessage = (msg: WebSocketMessage) => {
-    if (msg.type === 'sensor_update' && msg.device_id) {
+    if (msg.type === 'image_update' && msg.payload) {
+      const payload = msg.payload as any; // Assuming payload has device_id and image_url
+      if (payload.device_id && payload.image_url) {
+        setLatestImages(prev => {
+          const newMap = new Map(prev);
+          newMap.set(payload.device_id, payload.image_url);
+          return newMap;
+        });
+      }
+    } else if (msg.type === 'sensor_update' && msg.device_id) {
       setDevices((prev) => {
         const newMap = new Map(prev);
         const current = newMap.get(msg.device_id!) || {
@@ -106,7 +117,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <WebSocketContext.Provider value={{ isConnected, lastMessage, devices, alerts, sendMessage }}>
+    <WebSocketContext.Provider value={{ isConnected, lastMessage, devices, alerts, latestImages, sendMessage }}>
       {children}
     </WebSocketContext.Provider>
   );

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { VideoOff, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useWebSocket } from '@/context/WebSocketContext';
 
 interface VideoPlayerProps {
   deviceId?: string;
@@ -10,14 +11,17 @@ interface VideoPlayerProps {
 }
 
 export const VideoPlayer = ({ deviceId }: VideoPlayerProps) => {
+  const { latestImages } = useWebSocket();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Initial fetch
   useEffect(() => {
     if (!deviceId) return;
 
     const fetchLatestImage = async () => {
+      setLoading(true);
       try {
         const res = await api.get(`/images/latest?device_id=${deviceId}`);
         if (res.data && res.data.image_url) {
@@ -25,18 +29,22 @@ export const VideoPlayer = ({ deviceId }: VideoPlayerProps) => {
           setLastUpdated(new Date(res.data.created_at));
         }
       } catch (err) {
-        // Silent fail for polling
+        // Silent fail
+      } finally {
+        setLoading(false);
       }
     };
 
-    // Initial fetch
     fetchLatestImage();
-
-    // Poll every 2 seconds
-    const interval = setInterval(fetchLatestImage, 2000);
-
-    return () => clearInterval(interval);
   }, [deviceId]);
+
+  // Listen for WebSocket updates
+  useEffect(() => {
+    if (deviceId && latestImages.has(deviceId)) {
+      setImageUrl(latestImages.get(deviceId)!);
+      setLastUpdated(new Date());
+    }
+  }, [deviceId, latestImages]);
 
   if (!deviceId) {
     return (

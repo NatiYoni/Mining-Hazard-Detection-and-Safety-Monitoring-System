@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"minesense-backend/infrastructure/websocket"
 	"minesense-backend/usecases"
 	"net/http"
 
@@ -10,10 +11,11 @@ import (
 
 type ImageController struct {
 	ImageUseCase *usecases.ImageUseCase
+	Hub          *websocket.Hub
 }
 
-func NewImageController(uc *usecases.ImageUseCase) *ImageController {
-	return &ImageController{ImageUseCase: uc}
+func NewImageController(uc *usecases.ImageUseCase, hub *websocket.Hub) *ImageController {
+	return &ImageController{ImageUseCase: uc, Hub: hub}
 }
 
 type UploadImageInput struct {
@@ -39,6 +41,12 @@ func (c *ImageController) UploadImage(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
 		return
 	}
+
+	// Broadcast to WebSocket clients
+	c.Hub.BroadcastData(gin.H{
+		"type":    "image_update",
+		"payload": image,
+	})
 
 	ctx.JSON(http.StatusCreated, image)
 }

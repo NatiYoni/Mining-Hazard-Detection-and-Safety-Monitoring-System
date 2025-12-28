@@ -47,3 +47,25 @@ func (uc *UserUseCase) Login(username, password string) (*entities.User, error) 
 
 	return user, nil
 }
+
+func (uc *UserUseCase) ChangePassword(username, oldPassword, newPassword string) error {
+	user, err := uc.UserRepo.FindByUsername(username)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword))
+	if err != nil {
+		return errors.New("invalid old password")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user.Password = string(hashedPassword)
+	user.UpdatedAt = time.Now()
+
+	return uc.UserRepo.Update(user)
+}

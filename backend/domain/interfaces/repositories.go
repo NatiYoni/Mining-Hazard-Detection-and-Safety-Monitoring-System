@@ -28,6 +28,7 @@ type AlertRepository interface {
 type UserRepository interface {
 	Create(user *entities.User) error
 	FindByUsername(username string) (*entities.User, error)
+	Update(user *entities.User) error
 }
 
 type ImageRepository interface {

@@ -60,6 +60,9 @@ func SetupRouter(
 		// Alerts
 		protected.GET("/alerts", alertController.GetAllAlerts)
 
+		// User
+		protected.POST("/change-password", userController.ChangePassword)
+
 		// Images
 		protected.POST("/images", imageController.UploadImage)
 		protected.GET("/images/:id", imageController.GetImage)

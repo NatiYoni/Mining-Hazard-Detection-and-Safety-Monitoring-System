@@ -85,7 +85,7 @@ func (c *SensorController) ReceiveSensorData(ctx *gin.Context) {
 		payload = bodyBytes      // The whole body is the payload
 	}
 
-	err = c.SensorUseCase.ProcessSensorData(deviceID, sensorType, payload)
+	alerts, err := c.SensorUseCase.ProcessSensorData(deviceID, sensorType, payload)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process data"})
 		return
@@ -99,6 +99,14 @@ func (c *SensorController) ReceiveSensorData(ctx *gin.Context) {
 		"payload":     payload,
 		"timestamp":   time.Now(),
 	})
+
+	// Broadcast Alerts if any
+	for _, alert := range alerts {
+		c.Hub.BroadcastData(gin.H{
+			"type":  "alert",
+			"alert": alert,
+		})
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "Data received successfully"})
 }

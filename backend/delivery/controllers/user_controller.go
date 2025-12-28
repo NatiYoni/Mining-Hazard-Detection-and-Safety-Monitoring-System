@@ -73,3 +73,35 @@ func (c *UserController) Login(ctx *gin.Context) {
 		"user":  user,
 	})
 }
+
+type ChangePasswordInput struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
+func (c *UserController) ChangePassword(ctx *gin.Context) {
+	var input ChangePasswordInput
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get username from context (set by AuthMiddleware)
+	username, exists := ctx.Get("username")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	err := c.UserUseCase.ChangePassword(username.(string), input.OldPassword, input.NewPassword)
+	if err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "invalid old password" {
+			status = http.StatusUnauthorized
+		}
+		ctx.JSON(status, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
+}

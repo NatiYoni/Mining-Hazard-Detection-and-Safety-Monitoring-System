@@ -24,3 +24,7 @@ func (r *UserRepo) FindByUsername(username string) (*entities.User, error) {
 	err := r.DB.Where("username = ?", username).First(&user).Error
 	return &user, err
 }
+
+func (r *UserRepo) Update(user *entities.User) error {
+	return r.DB.Save(user).Error
+}

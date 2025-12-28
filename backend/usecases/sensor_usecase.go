@@ -21,7 +21,7 @@ func NewSensorUseCase(sensorRepo interfaces.SensorRepository, alertRepo interfac
 	}
 }
 
-func (uc *SensorUseCase) ProcessSensorData(deviceID uuid.UUID, sensorType string, payload json.RawMessage) error {
+func (uc *SensorUseCase) ProcessSensorData(deviceID uuid.UUID, sensorType string, payload json.RawMessage) ([]*entities.Alert, error) {
 	reading := &entities.SensorReading{
 		DeviceID:   deviceID,
 		SensorType: sensorType,
@@ -30,16 +30,17 @@ func (uc *SensorUseCase) ProcessSensorData(deviceID uuid.UUID, sensorType string
 	}
 
 	if err := uc.SensorRepo.Create(reading); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Hazard Detection
+	var alerts []*entities.Alert
 	var data map[string]interface{}
 	if err := json.Unmarshal(payload, &data); err == nil {
-		uc.checkHazards(deviceID, sensorType, data)
+		alerts = uc.checkHazards(deviceID, sensorType, data)
 	}
 
-	return nil
+	return alerts, nil
 }
 
 func (uc *SensorUseCase) GetLatest(deviceID uuid.UUID) (*entities.SensorReading, error) {
@@ -50,7 +51,9 @@ func (uc *SensorUseCase) GetHistory(deviceID uuid.UUID, start, end string) ([]en
 	return uc.SensorRepo.GetHistory(deviceID, start, end)
 }
 
-func (uc *SensorUseCase) checkHazards(deviceID uuid.UUID, sensorType string, data map[string]interface{}) {
+func (uc *SensorUseCase) checkHazards(deviceID uuid.UUID, sensorType string, data map[string]interface{}) []*entities.Alert {
+	var alerts []*entities.Alert
+
 	// Combined Telemetry or Individual Checks
 	// We check for keys regardless of sensorType to be robust, or strictly if sensorType is "telemetry"
 
@@ -58,7 +61,9 @@ func (uc *SensorUseCase) checkHazards(deviceID uuid.UUID, sensorType string, dat
 	// Threshold: > 700 PPM -> Critical
 	if val, ok := data["gas"].(float64); ok {
 		if val > 700 {
-			uc.createAlert(deviceID, "Gas Hazard", "Critical", "Dangerous Gas Levels (>700 PPM) detected! Evacuate!")
+			if alert := uc.createAlert(deviceID, "Gas Hazard", "Critical", "Dangerous Gas Levels (>700 PPM) detected! Evacuate!"); alert != nil {
+				alerts = append(alerts, alert)
+			}
 		}
 	}
 
@@ -66,26 +71,36 @@ func (uc *SensorUseCase) checkHazards(deviceID uuid.UUID, sensorType string, dat
 	// Thresholds: > 38°C (Critical), > 31°C (Caution)
 	if val, ok := data["temp"].(float64); ok {
 		if val > 38 {
-			uc.createAlert(deviceID, "Heat Stress", "Critical", "Critical Heat (>38°C)! Mandatory removal from area.")
+			if alert := uc.createAlert(deviceID, "Heat Stress", "Critical", "Critical Heat (>38°C)! Mandatory removal from area."); alert != nil {
+				alerts = append(alerts, alert)
+			}
 		} else if val > 31 {
-			uc.createAlert(deviceID, "Heat Stress", "Caution", "High Heat (>31°C). Hydration and rest suggested.")
+			if alert := uc.createAlert(deviceID, "Heat Stress", "Caution", "High Heat (>31°C). Hydration and rest suggested."); alert != nil {
+				alerts = append(alerts, alert)
+			}
 		}
 	}
 
 	// 3. Fall Detection (MPU-6050)
 	// Boolean flag from device
 	if val, ok := data["fall"].(bool); ok && val {
-		uc.createAlert(deviceID, "Man-Down", "Critical", "Fall detected! Man-down event initiated.")
+		if alert := uc.createAlert(deviceID, "Man-Down", "Critical", "Fall detected! Man-down event initiated."); alert != nil {
+			alerts = append(alerts, alert)
+		}
 	}
 
 	// 4. Structural/Vibration (Piezo)
 	// Assuming "vibration" key or similar if sent
 	if val, ok := data["vibration"].(float64); ok && val > 500 { // Threshold example, adjust as needed
-		uc.createAlert(deviceID, "Structural Warning", "High", "High-frequency vibration detected!")
+		if alert := uc.createAlert(deviceID, "Structural Warning", "High", "High-frequency vibration detected!"); alert != nil {
+			alerts = append(alerts, alert)
+		}
 	}
+
+	return alerts
 }
 
-func (uc *SensorUseCase) createAlert(deviceID uuid.UUID, alertType, severity, message string) {
+func (uc *SensorUseCase) createAlert(deviceID uuid.UUID, alertType, severity, message string) *entities.Alert {
 	alert := &entities.Alert{
 		DeviceID:  deviceID,
 		AlertType: alertType,
@@ -94,7 +109,10 @@ func (uc *SensorUseCase) createAlert(deviceID uuid.UUID, alertType, severity, me
 		CreatedAt: time.Now(),
 	}
 	// Log error if alert creation fails, but don't stop flow
-	_ = uc.AlertRepo.Create(alert)
+	if err := uc.AlertRepo.Create(alert); err != nil {
+		return nil
+	}
+	return alert
 }
 
 func (uc *SensorUseCase) GetReadingsByDevice(deviceID uuid.UUID) ([]entities.SensorReading, error) {

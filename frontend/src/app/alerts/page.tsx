@@ -7,6 +7,8 @@ import { AlertHistoryTable } from '@/components/dashboard/AlertHistoryTable';
 import { useWebSocket } from '@/context/WebSocketContext';
 import { api } from '@/lib/api';
 import { Alert } from '@/types';
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Header } from "@/components/layout/Header";
 
 export default function AlertsPage() {
   const { devices } = useWebSocket();
@@ -60,28 +62,36 @@ export default function AlertsPage() {
     .map(d => [d.deviceId, d.totalAlerts] as [string, number]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold mb-6">Alert Center</h1>
-      
-      <Tabs defaultValue="high-risk" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="high-risk">High Risk Devices</TabsTrigger>
-          <TabsTrigger value="history">Alert History</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="high-risk">
-          <div className="space-y-4">
-            <p className="text-muted-foreground">
-              Showing currently online devices with active Critical or Warning status.
-            </p>
-            <HighRiskDevices sortedDevices={highRiskDevices} />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="history">
-          <AlertHistoryTable alerts={alerts} loading={loading} />
-        </TabsContent>
-      </Tabs>
+    <div className="h-full relative">
+      <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-[80] bg-card">
+        <Sidebar />
+      </div>
+      <main className="md:pl-72">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-2xl font-bold mb-6">Alert Center</h1>
+          
+          <Tabs defaultValue="high-risk" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="high-risk">High Risk Devices</TabsTrigger>
+              <TabsTrigger value="history">Alert History</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="high-risk">
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  Showing currently online devices with active Critical or Warning status.
+                </p>
+                <HighRiskDevices sortedDevices={highRiskDevices} />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="history">
+              <AlertHistoryTable alerts={alerts} loading={loading} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
     </div>
   );
 }

@@ -24,7 +24,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Sticky Alerts Panel */}
-      <AlertsPanel />
+      <AlertsPanel timeRange={timeRange} />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -44,7 +44,7 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-foreground">
             Live Device Overview
           </h2>
-          <DeviceTable />
+          <DeviceTable timeRange={timeRange} />
         </div>
 
       </div>

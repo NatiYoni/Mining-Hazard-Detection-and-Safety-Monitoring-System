@@ -8,7 +8,7 @@ interface TimeRangeFilterProps {
 }
 
 export const TimeRangeFilter = ({ value, onChange }: TimeRangeFilterProps) => {
-  const ranges = ['1d', '7d', '30d', '90d', '1y', 'all'];
+  const ranges = ['now', '1d', '7d', '30d', '90d', '1y', 'all'];
 
   return (
     <div className="flex items-center justify-end mb-6">
@@ -23,7 +23,7 @@ export const TimeRangeFilter = ({ value, onChange }: TimeRangeFilterProps) => {
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            {range === '1d' ? '24h' : range === 'all' ? 'All' : range}
+            {range === 'now' ? 'Live' : range === '1d' ? '24h' : range === 'all' ? 'All' : range}
           </button>
         ))}
       </div>

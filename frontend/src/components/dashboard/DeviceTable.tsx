@@ -8,10 +8,14 @@ import { ArrowUpDown, Eye, Video } from 'lucide-react';
 
 type SortField = 'status' | 'temp' | 'gas' | 'last_seen';
 
-export const DeviceTable = () => {
+interface DeviceTableProps {
+  timeRange?: string;
+}
+
+export const DeviceTable = ({ timeRange = '1d' }: DeviceTableProps) => {
   const { devices } = useWebSocket();
-  const [sortField, setSortField] = useState<SortField>('status');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<SortField>('last_seen');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -22,7 +26,32 @@ export const DeviceTable = () => {
     }
   };
 
-  const sortedDevices = Array.from(devices.values()).sort((a, b) => {
+  const filterByTimeRange = (device: DeviceStatus) => {
+    if (timeRange === 'all') return true;
+    
+    const now = Date.now();
+    const lastSeen = new Date(device.last_seen).getTime();
+    const diff = now - lastSeen;
+
+    if (timeRange === 'now') {
+      // Consider "now" as active in the last 30 seconds or explicitly Online
+      return device.status !== 'Offline' && diff < 30000;
+    }
+
+    const ranges: { [key: string]: number } = {
+      '1d': 24 * 60 * 60 * 1000,
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+      '90d': 90 * 24 * 60 * 60 * 1000,
+      '1y': 365 * 24 * 60 * 60 * 1000,
+    };
+
+    return diff <= (ranges[timeRange] || ranges['1d']);
+  };
+
+  const sortedDevices = Array.from(devices.values())
+    .filter(filterByTimeRange)
+    .sort((a, b) => {
     let valA: any, valB: any;
 
     switch (sortField) {

@@ -5,13 +5,35 @@ import { useWebSocket } from '@/context/WebSocketContext';
 import { AlertTriangle, Info, XCircle } from 'lucide-react';
 import { DeviceStatus } from '@/types';
 
-export const AlertsPanel = () => {
+export const AlertsPanel = ({ timeRange = '1d' }: { timeRange?: string }) => {
   const { devices } = useWebSocket();
+
+  const filterByTimeRange = (device: DeviceStatus) => {
+    if (timeRange === 'all') return true;
+    
+    const now = Date.now();
+    const lastSeen = new Date(device.last_seen).getTime();
+    const diff = now - lastSeen;
+
+    if (timeRange === 'now') {
+      return device.status !== 'Offline' && diff < 30000;
+    }
+
+    const ranges: { [key: string]: number } = {
+      '1d': 24 * 60 * 60 * 1000,
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+      '90d': 90 * 24 * 60 * 60 * 1000,
+      '1y': 365 * 24 * 60 * 60 * 1000,
+    };
+
+    return diff <= (ranges[timeRange] || ranges['1d']);
+  };
 
   // Derive active alerts from devices status
   // In a real app, we might also fetch historical alerts from an API
   const activeAlerts = Array.from(devices.values())
-    .filter((d) => d.status !== 'Safe')
+    .filter((d) => d.status !== 'Safe' && filterByTimeRange(d))
     .sort((a, b) => {
       // Sort by severity (Critical > Warning)
       if (a.status === 'Critical' && b.status !== 'Critical') return -1;
@@ -51,6 +73,11 @@ const AlertCard = ({ device }: { device: DeviceStatus }) => {
     return 'UNKNOWN HAZARD';
   };
 
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? 'Just now' : date.toLocaleTimeString();
+  };
+
   return (
     <div
       className={`flex items-center justify-between p-3 rounded-lg border-l-4 ${
@@ -75,7 +102,7 @@ const AlertCard = ({ device }: { device: DeviceStatus }) => {
         </div>
       </div>
       <div className="text-xs opacity-75">
-        {new Date(device.last_seen).toLocaleTimeString()}
+        {formatTime(device.last_seen)}
       </div>
     </div>
   );

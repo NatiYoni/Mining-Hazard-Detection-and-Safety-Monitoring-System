@@ -41,7 +41,7 @@ export interface Alert {
 }
 
 export interface WebSocketMessage {
-  type: 'sensor_update' | 'alert_new' | 'device_status';
+  type: 'sensor_update' | 'alert_new' | 'device_status' | 'image_update';
   device_id?: string;
   payload?: any;
   timestamp?: string;

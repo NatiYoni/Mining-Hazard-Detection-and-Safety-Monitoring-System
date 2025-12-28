@@ -182,14 +182,14 @@ const DeviceRow = ({ device }: { device: DeviceStatus }) => {
           <Link 
             href={`/dashboard/device/${device.device_id}`}
             className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-            title="View Details"
+            title="View Device Details"
           >
             <Eye className="h-4 w-4" />
           </Link>
           <Link 
             href={`/dashboard/stream?device=${device.device_id}`}
             className="p-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
-            title="Watch Video"
+            title="Watch Live Video"
           >
             <Video className="h-4 w-4" />
           </Link>

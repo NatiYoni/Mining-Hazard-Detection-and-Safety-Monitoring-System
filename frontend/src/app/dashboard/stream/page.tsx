@@ -1,14 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useWebSocket } from '@/context/WebSocketContext';
 import { VideoPlayer } from '@/components/device/VideoPlayer';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 
 export default function StreamPage() {
+  const searchParams = useSearchParams();
   const { devices } = useWebSocket();
-  const deviceList = Array.from(devices.values());
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>(deviceList[0]?.device_id || '');
+  
+  // Only show online devices
+  const deviceList = Array.from(devices.values()).filter(d => d.is_online);
+  
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
+
+  // Auto-select from URL or default to first online device
+  useEffect(() => {
+    const paramId = searchParams.get('device');
+    if (paramId && devices.has(paramId)) {
+      setSelectedDeviceId(paramId);
+    } else if (!selectedDeviceId && deviceList.length > 0) {
+      setSelectedDeviceId(deviceList[0].device_id);
+    }
+  }, [searchParams, devices, deviceList, selectedDeviceId]);
 
   const selectedDevice = devices.get(selectedDeviceId);
 

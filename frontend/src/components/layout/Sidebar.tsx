@@ -22,13 +22,6 @@ const routes = [
     roles: ['Worker', 'Admin'],
   },
   {
-    label: "Real-time Monitoring",
-    icon: Activity,
-    href: "/dashboard/monitoring",
-    color: "text-violet-500",
-    roles: ['Admin', 'Supervisor'],
-  },
-  {
     label: "Video Stream",
     icon: Video,
     href: "/dashboard/stream",

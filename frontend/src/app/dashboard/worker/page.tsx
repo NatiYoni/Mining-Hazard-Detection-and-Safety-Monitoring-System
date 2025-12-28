@@ -7,7 +7,8 @@ import { WorkerDeviceCard } from '@/components/dashboard/WorkerDeviceCard';
 
 export default function WorkerSafetyPage() {
   const { devices } = useWebSocket();
-  const deviceList = Array.from(devices.values());
+  // Only show online devices for safety checks
+  const deviceList = Array.from(devices.values()).filter(d => d.is_online);
 
   return (
     <div className="p-6 space-y-6">

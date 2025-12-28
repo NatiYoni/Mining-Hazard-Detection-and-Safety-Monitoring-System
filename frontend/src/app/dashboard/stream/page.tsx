@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useWebSocket } from '@/context/WebSocketContext';
 import { VideoPlayer } from '@/components/device/VideoPlayer';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 
-export default function StreamPage() {
+function StreamContent() {
   const searchParams = useSearchParams();
   const { devices } = useWebSocket();
   
@@ -108,5 +108,13 @@ export default function StreamPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function StreamPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading stream...</div>}>
+      <StreamContent />
+    </Suspense>
   );
 }

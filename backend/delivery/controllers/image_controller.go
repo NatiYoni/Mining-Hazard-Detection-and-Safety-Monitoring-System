@@ -51,6 +51,26 @@ func (c *ImageController) UploadImage(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, image)
 }
 
+func (c *ImageController) StreamFrame(ctx *gin.Context) {
+	var input UploadImageInput
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Just broadcast, don't save to DB
+	c.Hub.BroadcastData(gin.H{
+		"type": "image_update",
+		"payload": gin.H{
+			"device_id": input.DeviceID,
+			"image_url": input.ImageURL,
+			// Add a fake timestamp or use current time
+		},
+	})
+
+	ctx.Status(http.StatusOK)
+}
+
 func (c *ImageController) GetImage(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := uuid.Parse(idStr)

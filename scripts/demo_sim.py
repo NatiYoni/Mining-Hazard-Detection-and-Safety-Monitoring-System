@@ -6,6 +6,7 @@ import uuid
 import os
 import sys
 import base64
+import threading
 
 try:
     import cv2
@@ -29,6 +30,7 @@ LOGIN_URL = f"{BASE_URL}/api/v1/login"
 REGISTER_URL = f"{BASE_URL}/api/v1/register"
 DEVICES_URL = f"{BASE_URL}/api/v1/devices"
 IMAGES_URL = f"{BASE_URL}/api/v1/images"
+STREAM_URL = f"{BASE_URL}/api/v1/images/stream"
 
 # Demo User Credentials
 ADMIN_USERNAME = "demo_admin"
@@ -109,8 +111,8 @@ def capture_webcam_frame():
         return None
     
     # Warm up camera (skip a few frames)
-    for _ in range(5):
-        cap.read()
+    # for _ in range(5):
+    #     cap.read()
 
     ret, frame = cap.read()
     cap.release()
@@ -119,22 +121,59 @@ def capture_webcam_frame():
         print("Error: Could not read frame.")
         return None
     
-    # Resize to reduce payload size (e.g., 640x480)
-    frame = cv2.resize(frame, (640, 480))
+    # Resize to reduce payload size (e.g., 320x240 for stream)
+    frame = cv2.resize(frame, (320, 240))
     
-    # Encode to JPEG
-    _, buffer = cv2.imencode('.jpg', frame)
+    # Encode to JPEG with lower quality for speed
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 50]
+    _, buffer = cv2.imencode('.jpg', frame, encode_param)
     
     # Convert to Base64
     jpg_as_text = base64.b64encode(buffer).decode('utf-8')
     return f"data:image/jpeg;base64,{jpg_as_text}"
 
+def stream_video(device_id, token):
+    """Continuously streams video frames to the backend."""
+    print("Starting video stream thread...")
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    while True:
+        try:
+            image_data = capture_webcam_frame()
+            if image_data:
+                payload = {
+                    "device_id": device_id,
+                    "image_url": image_data
+                }
+                # Use the stream endpoint to avoid filling DB
+                requests.post(STREAM_URL, json=payload, headers=headers)
+            
+            # 2 FPS
+            time.sleep(0.5)
+        except Exception as e:
+            print(f"Stream error: {e}")
+            time.sleep(1)
+
 def send_video_event(device_id, token):
     """Simulates sending a video/image capture during an event."""
-    print("Uploading event snapshot...")
+    # Now that we stream, this might be redundant, or we can use it to save a high-res snapshot to DB
+    print("Uploading event snapshot (High Res)...")
     
-    image_data = capture_webcam_frame()
-    
+    # Capture high res for event
+    if CV2_AVAILABLE:
+        cap = cv2.VideoCapture(0)
+        ret, frame = cap.read()
+        cap.release()
+        if ret:
+            frame = cv2.resize(frame, (640, 480))
+            _, buffer = cv2.imencode('.jpg', frame)
+            jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+            image_data = f"data:image/jpeg;base64,{jpg_as_text}"
+        else:
+            image_data = None
+    else:
+        image_data = None
+
     if not image_data:
         print("Using placeholder image.")
         image_data = "https://placehold.co/600x400/red/white?text=HAZARD+DETECTED"
@@ -242,6 +281,12 @@ def run_demo():
 
     print(f"\nSimulating Device: {device_id}")
     print(f"Assigned to Supervisor: {supervisor_id}")
+    
+    # Start Video Stream in background
+    if CV2_AVAILABLE:
+        stream_thread = threading.Thread(target=stream_video, args=(device_id, admin_token))
+        stream_thread.daemon = True
+        stream_thread.start()
     
     print("\nStarting Simulation...")
     print("1. Normal Operation (10s)")

@@ -65,6 +65,7 @@ func SetupRouter(
 
 		// Images
 		protected.POST("/images", imageController.UploadImage)
+		protected.POST("/images/stream", imageController.StreamFrame)
 		protected.GET("/images/:id", imageController.GetImage)
 		protected.GET("/images/latest", imageController.GetLatest)
 	}

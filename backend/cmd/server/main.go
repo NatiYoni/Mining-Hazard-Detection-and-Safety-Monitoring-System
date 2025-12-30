@@ -33,7 +33,7 @@ func main() {
 	userUseCase := usecases.NewUserUseCase(userRepo)
 
 	// Initialize Controllers
-	deviceController := controllers.NewDeviceController(deviceUseCase)
+	deviceController := controllers.NewDeviceController(deviceUseCase, hub)
 	sensorController := controllers.NewSensorController(sensorUseCase, hub)
 	alertController := controllers.NewAlertController(alertUseCase)
 	userController := controllers.NewUserController(userUseCase, cfg.JWTSecret)

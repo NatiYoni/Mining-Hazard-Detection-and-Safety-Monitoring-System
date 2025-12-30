@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"minesense-backend/infrastructure/websocket"
 	"minesense-backend/usecases"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -10,10 +12,11 @@ import (
 
 type DeviceController struct {
 	DeviceUseCase *usecases.DeviceUseCase
+	Hub           *websocket.Hub
 }
 
-func NewDeviceController(uc *usecases.DeviceUseCase) *DeviceController {
-	return &DeviceController{DeviceUseCase: uc}
+func NewDeviceController(uc *usecases.DeviceUseCase, hub *websocket.Hub) *DeviceController {
+	return &DeviceController{DeviceUseCase: uc, Hub: hub}
 }
 
 type CreateDeviceInput struct {
@@ -73,4 +76,23 @@ func (c *DeviceController) GetDeviceByID(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, device)
+}
+
+func (c *DeviceController) TriggerBuzzer(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	_, err := uuid.Parse(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID"})
+		return
+	}
+
+	// Broadcast command to WebSocket clients
+	c.Hub.BroadcastData(gin.H{
+		"type":      "device_command",
+		"device_id": idStr,
+		"command":   "buzzer_on",
+		"timestamp": time.Now(),
+	})
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Buzzer triggered successfully"})
 }

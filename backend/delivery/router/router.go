@@ -56,6 +56,7 @@ func SetupRouter(
 		protected.POST("/devices", middleware.RoleMiddleware("Admin"), deviceController.CreateDevice)
 		protected.GET("/devices", deviceController.GetAllDevices)
 		protected.GET("/devices/:id", deviceController.GetDeviceByID)
+		protected.POST("/devices/:id/command", deviceController.TriggerBuzzer)
 
 		// Alerts
 		protected.GET("/alerts", alertController.GetAllAlerts)

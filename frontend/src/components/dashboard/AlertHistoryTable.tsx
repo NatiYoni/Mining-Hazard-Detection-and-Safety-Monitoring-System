@@ -32,7 +32,9 @@ export function AlertHistoryTable({ alerts, loading }: AlertHistoryTableProps) {
               <tr key={alert.id} className="hover:bg-muted/50 transition-colors">
                 <td className="px-6 py-4 text-foreground">
                   {(() => {
-                    const date = new Date(alert.timestamp);
+                    const dateStr = alert.created_at || alert.timestamp;
+                    if (!dateStr) return 'N/A';
+                    const date = new Date(dateStr);
                     return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleString();
                   })()}
                 </td>

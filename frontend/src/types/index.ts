@@ -36,7 +36,8 @@ export interface Alert {
   device_id: string;
   severity: 'Critical' | 'Warning' | 'Info';
   message: string;
-  timestamp: string;
+  created_at: string; // Backend sends created_at
+  timestamp?: string; // Keep for backward compatibility if needed
   acknowledged: boolean;
 }
 

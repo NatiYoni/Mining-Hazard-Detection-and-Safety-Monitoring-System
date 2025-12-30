@@ -3,7 +3,7 @@
 import React, { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWebSocket } from '@/context/WebSocketContext';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { DeviceHeader } from '@/components/device/DeviceHeader';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { ArrowLeft, Thermometer, Activity, AlertTriangle } from 'lucide-react';
 
@@ -29,18 +29,10 @@ export default function DeviceDetailsPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer w-fit" onClick={() => router.back()}>
-        <ArrowLeft className="h-4 w-4" />
-        Back to Dashboard
-      </div>
+    <div className="space-y-6">
+      <DeviceHeader device={device} />
 
-      <PageHeader 
-        title={`Device: ${device.device_id}`} 
-        description={`Last seen: ${new Date(device.last_seen).toLocaleString()}`}
-      />
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="p-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Status Card */}
         <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
           <h3 className="text-sm font-medium text-muted-foreground mb-2">Current Status</h3>

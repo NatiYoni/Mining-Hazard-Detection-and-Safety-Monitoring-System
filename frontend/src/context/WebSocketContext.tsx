@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { WebSocketMessage, DeviceStatus, Alert, SensorPayload } from '../types';
 import { api } from '@/lib/api';
+import { useAuth } from './AuthContext';
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -21,6 +22,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   const [devices, setDevices] = useState<Map<string, DeviceStatus>>(new Map());
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [latestImages, setLatestImages] = useState<Map<string, string>>(new Map());
+  const { user, isLoading } = useAuth();
   
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -110,6 +112,8 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    if (isLoading || !user) return;
+
     connect();
 
     // Fetch initial devices
@@ -167,7 +171,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
       if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
       clearInterval(heartbeatInterval);
     };
-  }, []);
+  }, [user, isLoading]);
 
   return (
     <WebSocketContext.Provider value={{ isConnected, lastMessage, devices, alerts, latestImages, sendMessage }}>

@@ -80,7 +80,22 @@ def get_auth_token(username, password, role="User"):
     return None, None
 
 def create_device(token, supervisor_id=None):
-    """Creates a new device to ensure valid Device ID."""
+    """Creates a new device or reuses existing one from .device_id file."""
+    device_id_file = ".device_id"
+    
+    # Try to load existing device ID
+    if os.path.exists(device_id_file):
+        try:
+            with open(device_id_file, "r") as f:
+                existing_id = f.read().strip()
+            print(f"Found existing device ID: {existing_id}")
+            # Verify if it exists on backend (optional, but good practice)
+            # For now, we'll assume it's valid if we have it, or we could try to fetch it.
+            # If we wanted to be robust, we'd check GET /devices/{id}
+            return existing_id
+        except Exception as e:
+            print(f"Error reading device ID file: {e}")
+
     print("Creating a new simulated device...")
     headers = {"Authorization": f"Bearer {token}"}
     payload = {
@@ -96,6 +111,9 @@ def create_device(token, supervisor_id=None):
         if response.status_code == 201:
             device_id = response.json().get("id")
             print(f"Device created successfully: {device_id}")
+            # Save to file
+            with open(device_id_file, "w") as f:
+                f.write(device_id)
             return device_id
         else:
             print(f"Failed to create device: {response.status_code} - {response.text}")

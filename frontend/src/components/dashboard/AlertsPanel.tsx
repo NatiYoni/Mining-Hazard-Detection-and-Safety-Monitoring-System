@@ -35,10 +35,7 @@ export const AlertsPanel = ({ timeRange = '1d' }: { timeRange?: string }) => {
   const activeAlerts = Array.from(devices.values())
     .filter((d) => d.status !== 'Safe' && filterByTimeRange(d))
     .sort((a, b) => {
-      // Sort by severity (Critical > Warning)
-      if (a.status === 'Critical' && b.status !== 'Critical') return -1;
-      if (b.status === 'Critical' && a.status !== 'Critical') return 1;
-      // Then by recency (newest first)
+      // Sort by recency (newest first)
       return new Date(b.last_seen).getTime() - new Date(a.last_seen).getTime();
     });
 

@@ -16,7 +16,12 @@ export default function AlertsPage() {
     const fetchAlerts = async () => {
       try {
         const res = await api.get('/alerts');
-        setAlerts(res.data || []);
+        const sortedAlerts = (res.data || []).sort((a: Alert, b: Alert) => {
+          const dateA = new Date(a.created_at || a.timestamp || 0).getTime();
+          const dateB = new Date(b.created_at || b.timestamp || 0).getTime();
+          return dateB - dateA;
+        });
+        setAlerts(sortedAlerts);
       } catch (error) {
         console.error('Failed to fetch alerts', error);
       } finally {

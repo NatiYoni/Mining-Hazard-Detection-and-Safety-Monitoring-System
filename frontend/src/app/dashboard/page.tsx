@@ -7,17 +7,33 @@ import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { SystemSummary } from '@/components/dashboard/SystemSummary';
 import { DeviceTable } from '@/components/dashboard/DeviceTable';
 import { TimeRangeFilter } from '@/components/dashboard/TimeRangeFilter';
+import { AlertsChart } from '@/components/dashboard/AlertsChart';
+import { api } from '@/lib/api';
+import { Alert } from '@/types';
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [timeRange, setTimeRange] = useState('1d');
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
     if (user?.role === 'Worker') {
       router.push('/dashboard/worker');
     }
   }, [user, router]);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const res = await api.get('/alerts');
+        setAlerts(res.data || []);
+      } catch (error) {
+        console.error('Failed to fetch alerts', error);
+      }
+    };
+    fetchAlerts();
+  }, []);
 
   if (!user || user.role === 'Worker') return null; // Loading or redirecting
 
@@ -38,6 +54,11 @@ export default function DashboardPage() {
             <SystemSummary />
           </div>
         )}
+
+        {/* Alert Trends Chart */}
+        <div className="mb-8">
+           <AlertsChart alerts={alerts} />
+        </div>
 
         {/* Device Table */}
         <div className="space-y-4">

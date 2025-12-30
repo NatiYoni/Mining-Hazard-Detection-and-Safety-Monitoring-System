@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useWebSocket } from '@/context/WebSocketContext';
 import { DeviceStatus } from '@/types';
 import Link from 'next/link';
-import { ArrowUpDown, Eye, Video } from 'lucide-react';
+import { ArrowUpDown, Eye, Video, Bell } from 'lucide-react';
+import { api } from '@/lib/api';
 
 type SortField = 'status' | 'temp' | 'gas' | 'last_seen';
 
@@ -142,6 +143,22 @@ export const DeviceTable = ({ timeRange = '1d' }: DeviceTableProps) => {
 };
 
 const DeviceRow = ({ device }: { device: DeviceStatus }) => {
+  const [buzzerLoading, setBuzzerLoading] = useState(false);
+
+  const handleBuzzer = async () => {
+    if (!confirm('Activate buzzer for this device?')) return;
+    setBuzzerLoading(true);
+    try {
+      await api.post(`/devices/${device.device_id}/command`);
+      alert('Buzzer activated!');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to activate buzzer');
+    } finally {
+      setBuzzerLoading(false);
+    }
+  };
+
   const statusColors = {
     Safe: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
     Warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -179,6 +196,14 @@ const DeviceRow = ({ device }: { device: DeviceStatus }) => {
       </td>
       <td className="p-4 text-right">
         <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={handleBuzzer}
+            disabled={buzzerLoading}
+            className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
+            title="Activate Buzzer"
+          >
+            <Bell className="h-4 w-4" />
+          </button>
           <Link 
             href={`/dashboard/device/${device.device_id}`}
             className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"

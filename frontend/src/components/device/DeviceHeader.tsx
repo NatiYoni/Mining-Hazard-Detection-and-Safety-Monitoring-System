@@ -1,14 +1,29 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DeviceStatus } from '@/types';
-import { ArrowLeft, Clock, MapPin, User } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, User, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { api } from '@/lib/api';
 
 export const DeviceHeader = ({ device }: { device: DeviceStatus }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
+  const [buzzerLoading, setBuzzerLoading] = useState(false);
+
+  const handleBuzzer = async () => {
+    setBuzzerLoading(true);
+    try {
+      await api.post(`/devices/${device.device_id}/command`);
+      alert('Buzzer activated!');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to activate buzzer');
+    } finally {
+      setBuzzerLoading(false);
+    }
+  };
 
   const statusColors = {
     Safe: 'bg-success/10 text-success border-success/20',
@@ -59,19 +74,30 @@ export const DeviceHeader = ({ device }: { device: DeviceStatus }) => {
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="flex gap-4">
-            <div className="text-right">
-              <p className="text-xs text-gray-400 uppercase">Temperature</p>
-              <p className="text-xl font-mono font-bold text-gray-900">
-                {device.current_readings?.temp?.toFixed(1) || '--'}°C
-              </p>
-            </div>
-            <div className="text-right border-l pl-4">
-              <p className="text-xs text-gray-400 uppercase">Gas Level</p>
-              <p className="text-xl font-mono font-bold text-gray-900">
-                {device.current_readings?.gas || '--'} PPM
-              </p>
+          <div className="flex items-center gap-4">
+             <button 
+               onClick={handleBuzzer}
+               disabled={buzzerLoading}
+               className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 disabled:opacity-50 transition-colors"
+             >
+               <Bell className="h-4 w-4" />
+               {buzzerLoading ? 'Activating...' : 'Activate Buzzer'}
+             </button>
+
+            {/* Quick Stats */}
+            <div className="flex gap-4">
+              <div className="text-right">
+                <p className="text-xs text-gray-400 uppercase">Temperature</p>
+                <p className="text-xl font-mono font-bold text-gray-900">
+                  {device.current_readings?.temp?.toFixed(1) || '--'}°C
+                </p>
+              </div>
+              <div className="text-right border-l pl-4">
+                <p className="text-xs text-gray-400 uppercase">Gas Level</p>
+                <p className="text-xl font-mono font-bold text-gray-900">
+                  {device.current_readings?.gas || '--'} PPM
+                </p>
+              </div>
             </div>
           </div>
 

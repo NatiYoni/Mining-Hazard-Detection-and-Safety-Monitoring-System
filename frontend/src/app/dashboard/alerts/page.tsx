@@ -5,6 +5,7 @@ import { Alert } from '@/types';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { HighRiskDevices } from '@/components/dashboard/HighRiskDevices';
 import { AlertHistoryTable } from '@/components/dashboard/AlertHistoryTable';
+import { AlertsChart } from '@/components/dashboard/AlertsChart';
 import { api } from '@/lib/api';
 
 export default function AlertsPage() {
@@ -42,6 +43,9 @@ export default function AlertsPage() {
 
       {/* Most Dangerous Devices */}
       <HighRiskDevices sortedDevices={sortedDevices} />
+
+      {/* Alert Trends Chart */}
+      <AlertsChart alerts={alerts} />
 
       {/* Alert History */}
       <AlertHistoryTable alerts={alerts} loading={loading} />

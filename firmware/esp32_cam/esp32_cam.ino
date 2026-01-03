@@ -35,8 +35,8 @@ const String API_PASS = "password123";
 
 String jwtToken = "";
 unsigned long lastCaptureTime = 0;
-// Increased interval slightly to allow for encoding time
-const int captureInterval = 500; 
+// Reduced interval for higher FPS (try 0-100 depending on network)
+const int captureInterval = 50; 
 
 /* ===== FUNCTION PROTOTYPES ===== */
 void login();
@@ -71,11 +71,11 @@ void setup() {
   
   // QVGA is good for Base64 (small size)
   config.frame_size = FRAMESIZE_QVGA; 
-  config.jpeg_quality = 15;           
-  config.fb_count = 1;
+  config.jpeg_quality = 20; // Higher number = lower quality = faster FPS (10-63)          
+  config.fb_count = 2; // Try 2 buffers for better throughput
 
   if (psramFound()) {
-    config.jpeg_quality = 12;
+    config.jpeg_quality = 15; // Better quality if we have RAM
     config.fb_count = 2;
   }
 
@@ -118,7 +118,8 @@ void loop() {
     delay(1000);
   }
   
-  delay(10);
+  // Minimal delay to prevent watchdog trigger, but keep it fast
+  delay(1);
 }
 
 void login() {

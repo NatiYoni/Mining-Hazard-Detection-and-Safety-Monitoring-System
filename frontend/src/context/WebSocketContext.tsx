@@ -95,8 +95,8 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
         // Simple frontend status logic (can be overridden by backend alerts)
         if (payload.fall) current.status = 'Critical';
         else if ((payload.gas || 0) > 700) current.status = 'Critical';
-        else if ((payload.temp || 0) > 38) current.status = 'Critical';
-        else if ((payload.temp || 0) > 31) current.status = 'Warning';
+        else if ((payload.temp || 0) > 25) current.status = 'Critical';
+        else if ((payload.temp || 0) > 24) current.status = 'Warning';
         else current.status = 'Safe';
 
         newMap.set(msg.device_id!, current);

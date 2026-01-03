@@ -2,20 +2,37 @@ import 'dart:async';
 import '../../domain/entities/device.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 import '../datasources/websocket_datasource.dart';
+import '../datasources/dashboard_remote_datasource.dart';
 import '../models/device_model.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
   final WebSocketDataSource dataSource;
+  final DashboardRemoteDataSource remoteDataSource;
   final _devicesController = StreamController<List<Device>>.broadcast();
   final Map<String, DeviceModel> _devicesMap = {};
 
-  DashboardRepositoryImpl(this.dataSource) {
+  DashboardRepositoryImpl(this.dataSource, this.remoteDataSource) {
     dataSource.messageStream.listen(_handleMessage);
   }
 
   @override
   Stream<List<Device>> getDevicesStream() {
     return _devicesController.stream;
+  }
+
+  @override
+  Future<List<Device>> getDevices() async {
+    try {
+      final devices = await remoteDataSource.getDevices();
+      for (var device in devices) {
+        _devicesMap[device.id] = device;
+      }
+      _devicesController.add(_devicesMap.values.toList());
+      return _devicesMap.values.toList();
+    } catch (e) {
+      // If fetch fails, we might still have data from WS or cache
+      return _devicesMap.values.toList();
+    }
   }
 
   @override
@@ -26,6 +43,11 @@ class DashboardRepositoryImpl implements DashboardRepository {
   @override
   void disconnectWebSocket() {
     dataSource.disconnect();
+  }
+
+  @override
+  Future<void> toggleBuzzer(String deviceId, bool state) async {
+    await remoteDataSource.toggleBuzzer(deviceId, state);
   }
 
   void _handleMessage(Map<String, dynamic> message) {
@@ -51,8 +73,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
         String status = 'Safe';
         if (sensorPayload.fall == true) status = 'Critical';
         else if ((sensorPayload.gas ?? 0) > 700) status = 'Critical';
-        else if ((sensorPayload.temp ?? 0) > 38) status = 'Critical';
-        else if ((sensorPayload.temp ?? 0) > 31) status = 'Warning';
+        else if ((sensorPayload.temp ?? 0) > 25) status = 'Critical';
+        else if ((sensorPayload.temp ?? 0) > 24) status = 'Warning';
 
         final updated = current.copyWith(
           isOnline: true,
@@ -63,6 +85,30 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
         _devicesMap[deviceId] = updated;
         _devicesController.add(_devicesMap.values.toList());
+      }
+    } else if (type == 'image_update') {
+      final payload = message['payload'];
+      if (payload != null) {
+        final deviceId = payload['device_id'];
+        final imageUrl = payload['image_url'];
+        
+        if (deviceId != null && imageUrl != null) {
+          DeviceModel current = _devicesMap[deviceId] ??
+              DeviceModel(
+                id: deviceId,
+                isOnline: true,
+                lastSeen: DateTime.now(),
+                status: 'Safe',
+              );
+              
+          final updated = current.copyWith(
+            latestImageUrl: imageUrl,
+            lastSeen: DateTime.now(),
+          );
+          
+          _devicesMap[deviceId] = updated;
+          _devicesController.add(_devicesMap.values.toList());
+        }
       }
     } else if (type == 'device_status') {
        // Handle explicit status updates if any

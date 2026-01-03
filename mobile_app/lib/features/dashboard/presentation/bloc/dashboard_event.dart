@@ -16,3 +16,11 @@ class DevicesUpdated extends DashboardEvent {
   @override
   List<Object> get props => [devices];
 }
+
+class ToggleBuzzer extends DashboardEvent {
+  final String deviceId;
+  final bool state;
+  const ToggleBuzzer(this.deviceId, this.state);
+  @override
+  List<Object> get props => [deviceId, state];
+}

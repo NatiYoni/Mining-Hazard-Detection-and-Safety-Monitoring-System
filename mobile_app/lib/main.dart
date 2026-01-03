@@ -10,7 +10,6 @@ import 'injection_container.dart' as di;
 import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
 
 import 'features/alerts/presentation/bloc/alerts_bloc.dart';
-import 'features/alerts/presentation/bloc/alerts_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,9 +36,17 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'MineSafe',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF1E88E5),
+            brightness: Brightness.light,
+          ),
           useMaterial3: true,
+          appBarTheme: const AppBarTheme(
+            centerTitle: true,
+            elevation: 0,
+          ),
         ),
         home: const AuthWrapper(),
       ),

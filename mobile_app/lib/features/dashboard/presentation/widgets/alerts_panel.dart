@@ -16,53 +16,47 @@ class AlertsPanel extends StatelessWidget {
               .where((d) => d.status != 'Safe')
               .toList()
             ..sort((a, b) {
-              if (a.status == 'Critical' && b.status != 'Critical') return -1;
-              if (b.status == 'Critical' && a.status != 'Critical') return 1;
+              // Sort by recency (newest first)
               return b.lastSeen.compareTo(a.lastSeen);
             });
 
           if (activeAlerts.isEmpty) return const SizedBox.shrink();
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text(
-                    'ACTIVE ALERTS (${activeAlerts.length})',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600,
-                      letterSpacing: 1.2,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Active Alerts (${activeAlerts.length})',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: activeAlerts.length > 3 ? 3 : activeAlerts.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 8),
+              ),
+              SizedBox(
+                height: 140,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: activeAlerts.length,
+                  separatorBuilder: (context, index) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
-                    return _AlertCard(device: activeAlerts[index]);
+                    return SizedBox(
+                      width: 280,
+                      child: _AlertCard(device: activeAlerts[index]),
+                    );
                   },
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         }
         return const SizedBox.shrink();
@@ -90,54 +84,84 @@ class _AlertCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCritical = device.status == 'Critical';
     final color = isCritical ? Colors.red : Colors.orange;
-    final bgColor = isCritical ? Colors.red.shade50 : Colors.orange.shade50;
+    final borderColor = isCritical ? Colors.red.shade200 : Colors.orange.shade200;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border(left: BorderSide(color: color, width: 4)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isCritical ? Icons.warning_rounded : Icons.info_outline,
-            color: color,
-            size: 20,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Device: ${device.id.substring(0, 8)}...',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                Text(
-                  _getCause(device),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: color.withOpacity(0.8),
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning, size: 14, color: color),
+                    const SizedBox(width: 4),
+                    Text(
+                      isCritical ? 'CRITICAL' : 'WARNING',
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Text(
+                _formatTime(device.lastSeen),
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+              ),
+            ],
           ),
           Text(
-            'Just now', // Implement proper time formatting
+            _getCause(device),
             style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
             ),
+          ),
+          Row(
+            children: [
+              Icon(Icons.memory, size: 14, color: Colors.grey.shade400),
+              const SizedBox(width: 4),
+              Text(
+                'Device: ${device.id.length > 8 ? device.id.substring(0, 8) : device.id}...',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final diff = now.difference(time);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    return '${diff.inHours}h ago';
   }
 }

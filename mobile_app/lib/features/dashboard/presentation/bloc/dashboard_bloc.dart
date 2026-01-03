@@ -1,31 +1,46 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/entities/device.dart';
 import '../../domain/repositories/dashboard_repository.dart';
+import '../../domain/usecases/toggle_buzzer_usecase.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final DashboardRepository repository;
+  final ToggleBuzzerUseCase toggleBuzzerUseCase;
   StreamSubscription? _devicesSubscription;
 
-  DashboardBloc(this.repository) : super(DashboardInitial()) {
+  DashboardBloc(this.repository, this.toggleBuzzerUseCase) : super(DashboardInitial()) {
     on<DashboardStarted>(_onStarted);
     on<DashboardStopped>(_onStopped);
     on<DevicesUpdated>(_onDevicesUpdated);
+    on<ToggleBuzzer>(_onToggleBuzzer);
   }
 
-  void _onStarted(DashboardStarted event, Emitter<DashboardState> emit) {
+  void _onStarted(DashboardStarted event, Emitter<DashboardState> emit) async {
     repository.connectWebSocket();
     _devicesSubscription?.cancel();
     _devicesSubscription = repository.getDevicesStream().listen(
       (devices) => add(DevicesUpdated(devices)),
     );
+    
+    // Fetch initial data
+    try {
+      final devices = await repository.getDevices();
+      add(DevicesUpdated(devices));
+    } catch (e) {
+      // Handle error or just rely on WS
+      print('Failed to fetch initial devices: $e');
+    }
   }
 
   void _onStopped(DashboardStopped event, Emitter<DashboardState> emit) {
     _devicesSubscription?.cancel();
     repository.disconnectWebSocket();
+  }
+
+  Future<void> _onToggleBuzzer(ToggleBuzzer event, Emitter<DashboardState> emit) async {
+    await toggleBuzzerUseCase(ToggleBuzzerParams(deviceId: event.deviceId, state: event.state));
   }
 
   void _onDevicesUpdated(DevicesUpdated event, Emitter<DashboardState> emit) {

@@ -19,7 +19,7 @@ class _StreamPageState extends State<StreamPage> {
     return BlocBuilder<DashboardBloc, DashboardState>(
       builder: (context, state) {
         if (state is DashboardLoaded) {
-          final onlineDevices = state.devices.where((d) => d.isOnline).toList();
+          final List<Device> onlineDevices = state.devices.where((d) => d.isOnline).toList();
 
           if (onlineDevices.isEmpty) {
             return const Center(child: Text('No online devices available for streaming.'));
@@ -36,7 +36,7 @@ class _StreamPageState extends State<StreamPage> {
             _selectedDeviceId = onlineDevices.first.id;
           }
 
-          final selectedDevice = onlineDevices.firstWhere(
+          final Device selectedDevice = onlineDevices.firstWhere(
             (d) => d.id == _selectedDeviceId,
             orElse: () => onlineDevices.first,
           );
@@ -76,23 +76,53 @@ class _StreamPageState extends State<StreamPage> {
                   decoration: BoxDecoration(
                     color: Colors.black,
                     borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.videocam_off, color: Colors.white54, size: 48),
-                        SizedBox(height: 16),
-                        Text(
-                          'Live Stream Placeholder',
-                          style: TextStyle(color: Colors.white54),
-                        ),
-                        Text(
-                          '(Video Player Implementation Required)',
-                          style: TextStyle(color: Colors.white24, fontSize: 12),
-                        ),
-                      ],
-                    ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: selectedDevice.latestImageUrl != null
+                        ? Image.network(
+                            selectedDevice.latestImageUrl!,
+                            fit: BoxFit.cover,
+                            gaplessPlayback: true,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.broken_image, color: Colors.white54, size: 48),
+                                    SizedBox(height: 16),
+                                    Text('Failed to load stream', style: TextStyle(color: Colors.white54)),
+                                  ],
+                                ),
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const Center(
+                                child: CircularProgressIndicator(color: Colors.white),
+                              );
+                            },
+                          )
+                        : const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.videocam_off, color: Colors.white54, size: 48),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Waiting for stream...',
+                                  style: TextStyle(color: Colors.white54),
+                                ),
+                              ],
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 24),

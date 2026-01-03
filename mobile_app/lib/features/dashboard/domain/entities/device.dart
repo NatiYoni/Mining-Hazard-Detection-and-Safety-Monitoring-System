@@ -23,6 +23,7 @@ class Device extends Equatable {
   final DateTime lastSeen;
   final SensorPayload? currentReadings;
   final String status; // 'Safe', 'Warning', 'Critical'
+  final String? latestImageUrl;
 
   const Device({
     required this.id,
@@ -30,8 +31,9 @@ class Device extends Equatable {
     required this.lastSeen,
     this.currentReadings,
     required this.status,
+    this.latestImageUrl,
   });
 
   @override
-  List<Object?> get props => [id, isOnline, lastSeen, currentReadings, status];
+  List<Object?> get props => [id, isOnline, lastSeen, currentReadings, status, latestImageUrl];
 }

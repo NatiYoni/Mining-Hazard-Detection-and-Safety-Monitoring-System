@@ -3,6 +3,7 @@ package websocket
 import (
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -58,7 +59,10 @@ func (h *Hub) Run() {
 			for client := range h.clients {
 				err := client.WriteJSON(message)
 				if err != nil {
-					log.Printf("WebSocket error: %v", err)
+					// Only log actual errors, not expected disconnections
+					if !strings.Contains(err.Error(), "broken pipe") && !strings.Contains(err.Error(), "connection reset") {
+						log.Printf("WebSocket error: %v", err)
+					}
 					client.Close()
 					delete(h.clients, client)
 				}

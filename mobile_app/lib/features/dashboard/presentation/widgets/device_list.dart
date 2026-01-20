@@ -113,40 +113,19 @@ class DeviceList extends StatelessWidget {
                 trailing: IconButton(
                   icon: const Icon(Icons.notifications_active_outlined),
                   color: Colors.orange,
-                  onPressed: () => _showBuzzerDialog(context, device.id),
+                  onPressed: () {
+                    // Trigger buzzer immediately (Backend handles 30s timer)
+                    context.read<DashboardBloc>().add(ToggleBuzzer(device.id, true));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Buzzer activated for 30 seconds')),
+                    );
+                  },
                 ),
               ),
             );
           },
         ),
       ],
-    );
-  }
-
-  void _showBuzzerDialog(BuildContext context, String deviceId) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remote Buzzer'),
-        content: const Text('Control the buzzer for this device.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              context.read<DashboardBloc>().add(ToggleBuzzer(deviceId, false));
-              Navigator.pop(context);
-            },
-            child: const Text('Turn OFF'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.read<DashboardBloc>().add(ToggleBuzzer(deviceId, true));
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            child: const Text('Turn ON'),
-          ),
-        ],
-      ),
     );
   }
 }

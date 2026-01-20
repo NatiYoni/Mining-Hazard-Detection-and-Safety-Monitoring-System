@@ -68,14 +68,14 @@ func (uc *SensorUseCase) checkHazards(deviceID uuid.UUID, sensorType string, dat
 	}
 
 	// 2. Temperature Sensor (DHT-22)
-	// Thresholds: > 38°C (Critical), > 31°C (Caution)
+	// Thresholds: > 25°C (Critical), > 24°C (Caution)
 	if val, ok := data["temp"].(float64); ok {
-		if val > 38 {
-			if alert := uc.createAlert(deviceID, "Heat Stress", "Critical", "Critical Heat (>38°C)! Mandatory removal from area."); alert != nil {
+		if val > 25 {
+			if alert := uc.createAlert(deviceID, "Heat Stress", "Critical", "Critical Heat (>25°C)! Mandatory removal from area."); alert != nil {
 				alerts = append(alerts, alert)
 			}
-		} else if val > 31 {
-			if alert := uc.createAlert(deviceID, "Heat Stress", "Warning", "High Heat (>31°C). Hydration and rest suggested."); alert != nil {
+		} else if val > 24 {
+			if alert := uc.createAlert(deviceID, "Heat Stress", "Warning", "High Heat (>24°C). Hydration and rest suggested."); alert != nil {
 				alerts = append(alerts, alert)
 			}
 		}

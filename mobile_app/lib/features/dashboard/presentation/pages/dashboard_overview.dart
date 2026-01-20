@@ -64,7 +64,9 @@ class _DashboardOverviewState extends State<DashboardOverview> {
           BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) {
               if (state is DashboardLoaded) {
-                return DeviceList(devices: state.devices);
+                // Only show online devices
+                final onlineDevices = state.devices.where((d) => d.isOnline).toList();
+                return DeviceList(devices: onlineDevices);
               }
               return const SizedBox.shrink();
             },

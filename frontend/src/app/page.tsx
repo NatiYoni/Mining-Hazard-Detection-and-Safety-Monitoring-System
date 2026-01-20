@@ -32,19 +32,19 @@ export default function LandingPage() {
                     src="/hero-bg.png"
                     alt="Underground mining operation"
                     fill
-                    className="object-cover opacity-20"
+                    className="object-cover opacity-50"
                     priority
                 />
                 
                 {/* Layer 2: Colorful Animated Gradients */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                     <div className="absolute -top-[10%] -left-[10%] w-[40rem] h-[40rem] bg-blue-600/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
-                     <div className="absolute top-[20%] -right-[10%] w-[35rem] h-[35rem] bg-yellow-600/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse delay-1000"></div>
-                     <div className="absolute -bottom-[10%] left-[20%] w-[45rem] h-[45rem] bg-purple-600/20 rounded-full mix-blend-screen filter blur-[120px] animate-pulse delay-2000"></div>
+                     <div className="absolute -top-[10%] -left-[10%] w-[40rem] h-[40rem] bg-blue-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
+                     <div className="absolute top-[20%] -right-[10%] w-[35rem] h-[35rem] bg-yellow-600/10 rounded-full mix-blend-screen filter blur-[100px] animate-pulse delay-1000"></div>
+                     <div className="absolute -bottom-[10%] left-[20%] w-[45rem] h-[45rem] bg-purple-600/10 rounded-full mix-blend-screen filter blur-[120px] animate-pulse delay-2000"></div>
                 </div>
 
                 {/* Layer 3: Overlay for Text Visibility */}
-                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/80 to-slate-950" />
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/50 to-slate-950" />
             </div>
 
             <div className="container mx-auto px-6 relative z-10 text-center">

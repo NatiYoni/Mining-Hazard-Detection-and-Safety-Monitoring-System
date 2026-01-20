@@ -42,7 +42,7 @@ float lastMagnitude = 0;
 // ================= FUNCTION PROTOTYPES =================
 void connectWiFi();
 void login();
-void sendSensorData(float temp, float hum, float vibration, bool fall);
+void sendSensorData(float temp, float hum, float vibration, bool fall, bool &localAlarmState);
 void blinkLED();
 void piezoBeep();
 
@@ -85,7 +85,7 @@ void setup() {
 }
 
 void loop() {
-  bool alarm = false;
+  bool localAlarm = false;
   bool isShaking = false;
   
   // 1. Read DHT22
@@ -100,7 +100,7 @@ void loop() {
   } else {
     if (temperature > TEMP_CRITICAL_LIMIT && humidity > HUM_CRITICAL_LIMIT) {
        Serial.println("⚠️ Temp & Humidity Alert!");
-       alarm = true;
+       localAlarm = true;
     }
   }
 
@@ -109,7 +109,7 @@ void loop() {
   // Serial.print("Piezo Value: "); Serial.println(piezoValue); // Debug
   if (piezoValue > PIEZO_THRESHOLD) {
     Serial.println("⚠️ Piezo Press Detected!");
-    alarm = true;
+    localAlarm = true;
   }
 
   // 3. Read MPU6050 (Shake Detection)
@@ -132,14 +132,14 @@ void loop() {
     if (delta > SHAKE_THRESHOLD) {
       Serial.println("⚠️ Shaking Detected!");
       isShaking = true;
-      alarm = true;
+      localAlarm = true;
     }
   }
 
   // 4. Local Alarm Logic
   Serial.printf("Temp: %.1f C  Hum: %.1f %%  Piezo: %d  Shake: %.2f\n", temperature, humidity, piezoValue, delta);
 
-  if (alarm) {
+  if (localAlarm) {
     digitalWrite(BUZZER, HIGH);
     digitalWrite(LED_PIN, HIGH);
     // piezoBeep(); // Optional: if you want the piezo to beep back
@@ -156,7 +156,8 @@ void loop() {
     
     if (jwtToken != "") {
       // Pass real shake status as 'fall' parameter for now to trigger alert on dashboard
-      sendSensorData(temperature, humidity, delta, isShaking);
+      // Pass reference to localAlarm so sendSensorData can modify it (for remote buzzer control)
+      sendSensorData(temperature, humidity, delta, isShaking, localAlarm);
     }
   } else {
     Serial.println("WiFi Disconnected! Reconnecting...");
@@ -240,7 +241,7 @@ void login() {
   http.end();
 }
 
-void sendSensorData(float temp, float hum, float vibration, bool fall) {
+void sendSensorData(float temp, float hum, float vibration, bool fall, bool &localAlarmState) {
   HTTPClient http;
   String url = BASE_URL + "/sensor-data";
 
@@ -281,11 +282,11 @@ void sendSensorData(float temp, float hum, float vibration, bool fall) {
         // Remote activation overrides local logic
         Serial.println("🔔 Remote Buzzer Command Received: ON");
         digitalWrite(BUZZER, HIGH);
-        alarm = true; // Keep it on until next loop checks
+        localAlarmState = true; // Update local state so loop knows it's active
       } else {
         // If remote is OFF, we rely on local 'alarm' variable.
         // If local alarm is also OFF, this ensures buzzer is OFF.
-        if (!alarm) {
+        if (!localAlarmState) {
              digitalWrite(BUZZER, LOW);
         }
       }

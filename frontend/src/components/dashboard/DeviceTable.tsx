@@ -146,11 +146,10 @@ const DeviceRow = ({ device }: { device: DeviceStatus }) => {
   const [buzzerLoading, setBuzzerLoading] = useState(false);
 
   const handleBuzzer = async () => {
-    if (!confirm('Activate buzzer for this device?')) return;
     setBuzzerLoading(true);
     try {
       await api.post(`/devices/${device.device_id}/command`);
-      alert('Buzzer activated!');
+      // alert('Buzzer activated!'); // Optional: Remove alert too if they want silent success or use toast
     } catch (e) {
       console.error(e);
       alert('Failed to activate buzzer');

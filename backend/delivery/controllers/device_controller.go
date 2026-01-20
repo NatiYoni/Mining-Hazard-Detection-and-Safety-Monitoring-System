@@ -80,19 +80,58 @@ func (c *DeviceController) GetDeviceByID(ctx *gin.Context) {
 
 func (c *DeviceController) TriggerBuzzer(ctx *gin.Context) {
 	idStr := ctx.Param("id")
-	_, err := uuid.Parse(idStr)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID"})
 		return
 	}
 
-	// Broadcast command to WebSocket clients
+	// 1. Get current device state
+	device, err := c.DeviceUseCase.GetDeviceByID(id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Device not found"})
+		return
+	}
+
+	// 2. Activate Buzzer for 30 Seconds
+	device.BuzzerActive = true
+	if err := c.DeviceUseCase.UpdateDevice(device); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update buzzer state"})
+		return
+	}
+
+	// 3. Broadcast ON command
 	c.Hub.BroadcastData(gin.H{
-		"type":      "device_command",
-		"device_id": idStr,
-		"command":   "buzzer_on",
-		"timestamp": time.Now(),
+		"type":        "device_command",
+		"device_id":   idStr,
+		"command":     "buzzer_on",
+		"is_active":   true,
+		"timestamp":   time.Now(),
 	})
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Buzzer triggered successfully"})
+	// 4. Start Timer to Turn Off after 30s
+	go func(dID uuid.UUID) {
+		time.Sleep(30 * time.Second)
+		
+		// Retrieve fresh instance to avoid race conditions
+		d, err := c.DeviceUseCase.GetDeviceByID(dID)
+		if err == nil {
+			d.BuzzerActive = false
+			c.DeviceUseCase.UpdateDevice(d)
+			
+			// Broadcast OFF command
+			c.Hub.BroadcastData(gin.H{
+				"type":        "device_command",
+				"device_id":   dID.String(),
+				"command":     "buzzer_off",
+				"is_active":   false,
+				"timestamp":   time.Now(),
+			})
+		}
+	}(id)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":       "Buzzer activated for 30 seconds",
+		"buzzer_active": true,
+	})
 }

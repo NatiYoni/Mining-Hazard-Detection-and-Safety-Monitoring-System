@@ -268,7 +268,29 @@ void sendSensorData(float temp, float hum, float vibration, bool fall) {
   int httpResponseCode = http.POST(requestBody);
 
   if (httpResponseCode == 200 || httpResponseCode == 201) {
+    String response = http.getString();
     Serial.println("✅ Data Sent Successfully");
+    
+    // Parse response for Buzzer Command
+    DynamicJsonDocument respDoc(200);
+    deserializeJson(respDoc, response);
+    
+    if (respDoc.containsKey("buzzer")) {
+      bool buzzerState = respDoc["buzzer"];
+      if (buzzerState) {
+        // Remote activation overrides local logic
+        Serial.println("🔔 Remote Buzzer Command Received: ON");
+        digitalWrite(BUZZER, HIGH);
+        alarm = true; // Keep it on until next loop checks
+      } else {
+        // If remote is OFF, we rely on local 'alarm' variable.
+        // If local alarm is also OFF, this ensures buzzer is OFF.
+        if (!alarm) {
+             digitalWrite(BUZZER, LOW);
+        }
+      }
+    }
+
   } else if (httpResponseCode == 401) {
     Serial.println("❌ Unauthorized (401). Token might be expired.");
     jwtToken = ""; 

@@ -29,7 +29,7 @@ export default function LandingPage() {
             <div className="absolute inset-0 z-0">
                 {/* Layer 1: Base Image (Subtle Texture) */}
                 <Image
-                    src="/hero-bg.jpg"
+                    src="/hero-bg.png"
                     alt="Underground mining operation"
                     fill
                     className="object-cover opacity-20"

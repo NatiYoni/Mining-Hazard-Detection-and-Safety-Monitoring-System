@@ -12,6 +12,7 @@ type Device struct {
 	Location     string    `json:"location"`
 	SupervisorID *uuid.UUID `gorm:"type:uuid" json:"supervisor_id"` // Pointer to allow null
 	Supervisor   *User      `gorm:"foreignKey:SupervisorID" json:"supervisor,omitempty"`
+	BuzzerActive bool       `gorm:"default:false" json:"buzzer_active"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

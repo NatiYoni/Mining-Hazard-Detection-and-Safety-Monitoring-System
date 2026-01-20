@@ -209,7 +209,7 @@ def send_data(device_id, data, token):
 def simulate_normal():
     """Simulates normal safe conditions"""
     return {
-        "temp": round(random.uniform(20, 28), 1),
+        "temp": round(random.uniform(20, 23), 1),
         "gas": round(random.uniform(100, 300), 1),
         "vibration": round(random.uniform(0, 50), 1),
         "fall": False
@@ -218,7 +218,7 @@ def simulate_normal():
 def simulate_gas_leak():
     """Simulates a gas leak event"""
     return {
-        "temp": round(random.uniform(25, 30), 1),
+        "temp": round(random.uniform(20, 23), 1),
         "gas": round(random.uniform(750, 1200), 1), # > 700 is Critical
         "vibration": round(random.uniform(0, 50), 1),
         "fall": False
@@ -227,7 +227,7 @@ def simulate_gas_leak():
 def simulate_heat_wave():
     """Simulates high temperature"""
     return {
-        "temp": round(random.uniform(39, 45), 1), # > 38 is Critical
+        "temp": round(random.uniform(26, 35), 1), # > 25 is Critical
         "gas": round(random.uniform(200, 400), 1),
         "vibration": round(random.uniform(0, 50), 1),
         "fall": False
@@ -236,7 +236,7 @@ def simulate_heat_wave():
 def simulate_warning():
     """Simulates warning temperature"""
     return {
-        "temp": round(random.uniform(32, 37), 1), # > 31 is Warning
+        "temp": round(random.uniform(24.1, 24.9), 1), # > 24 is Warning
         "gas": round(random.uniform(200, 400), 1),
         "vibration": round(random.uniform(0, 50), 1),
         "fall": False
@@ -245,7 +245,7 @@ def simulate_warning():
 def simulate_fall():
     """Simulates a worker fall"""
     return {
-        "temp": round(random.uniform(20, 28), 1),
+        "temp": round(random.uniform(20, 23), 1),
         "gas": round(random.uniform(100, 300), 1),
         "vibration": round(random.uniform(100, 200), 1), # Impact vibration
         "fall": True

@@ -32,12 +32,8 @@ export default function LandingPage() {
             </div>
 
             <div className="container mx-auto px-6 relative z-10 text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-yellow-500 mb-6">
-                    <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                    System Operational v1.0
-                </div>
                 
-                <h1 className="text-5xl lg:text-7xl font-bold tracking-tight mb-8 bg-gradient-to-br from-white via-white to-slate-400 bg-clip-text text-transparent">
+                <h1 className="text-5xl lg:text-7xl font-bold tracking-tight mb-8 text-white drop-shadow-2xl">
                     Standardizing Safety <br className="hidden lg:block" /> Below the Surface.
                 </h1>
                 
@@ -74,7 +70,7 @@ export default function LandingPage() {
                      <FeatureCard 
                         icon={<Video className="h-8 w-8 text-yellow-500" />}
                         title="Video Surveillance"
-                        description="AI-powered camera feeds for detecting unauthorized access, PPE compliance, and potential fall hazards."
+                        description="Real-time camera feeds to monitor unauthorized access and PPE compliance, and allow supervisors to visually assess risks like flooding, fire, or falls."
                      />
                      <FeatureCard 
                         icon={<Radio className="h-8 w-8 text-rose-500" />}

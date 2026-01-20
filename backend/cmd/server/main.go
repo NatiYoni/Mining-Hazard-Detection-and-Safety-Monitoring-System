@@ -34,7 +34,7 @@ func main() {
 
 	// Initialize Controllers
 	deviceController := controllers.NewDeviceController(deviceUseCase, hub)
-	sensorController := controllers.NewSensorController(sensorUseCase, hub)
+	sensorController := controllers.NewSensorController(sensorUseCase, deviceUseCase, hub)
 	alertController := controllers.NewAlertController(alertUseCase)
 	userController := controllers.NewUserController(userUseCase, cfg.JWTSecret)
 	videoController := controllers.NewVideoController(hub)

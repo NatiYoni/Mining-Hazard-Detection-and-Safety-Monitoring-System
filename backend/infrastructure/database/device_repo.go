@@ -31,3 +31,7 @@ func (r *DeviceRepo) FindAll() ([]entities.Device, error) {
 	err := r.DB.Find(&devices).Error
 	return devices, err
 }
+
+func (r *DeviceRepo) Update(device *entities.Device) error {
+	return r.DB.Save(device).Error
+}

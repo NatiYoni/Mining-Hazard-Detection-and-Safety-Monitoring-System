@@ -35,3 +35,8 @@ func (uc *DeviceUseCase) GetAllDevices() ([]entities.Device, error) {
 func (uc *DeviceUseCase) GetDeviceByID(id uuid.UUID) (*entities.Device, error) {
 	return uc.DeviceRepo.FindByID(id)
 }
+
+func (uc *DeviceUseCase) UpdateDevice(device *entities.Device) error {
+	device.UpdatedAt = time.Now()
+	return uc.DeviceRepo.Update(device)
+}

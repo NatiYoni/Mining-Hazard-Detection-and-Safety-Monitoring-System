@@ -10,6 +10,7 @@ type DeviceRepository interface {
 	Create(device *entities.Device) error
 	FindByID(id uuid.UUID) (*entities.Device, error)
 	FindAll() ([]entities.Device, error)
+	Update(device *entities.Device) error
 }
 
 type SensorRepository interface {

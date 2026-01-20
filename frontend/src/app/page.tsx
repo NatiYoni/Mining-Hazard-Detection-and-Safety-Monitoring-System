@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, ShieldCheck, Activity, Video, Radio } from 'lucide-react';
 
 export default function LandingPage() {
@@ -24,11 +25,26 @@ export default function LandingPage() {
 
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-            {/* Background Gradient/Mesh */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-30 pointer-events-none">
-                 <div className="absolute top-20 left-20 w-72 h-72 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
-                 <div className="absolute top-20 right-20 w-72 h-72 bg-yellow-600 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-1000"></div>
-                 <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-2000"></div>
+            {/* Background Layers */}
+            <div className="absolute inset-0 z-0">
+                {/* Layer 1: Base Image (Subtle Texture) */}
+                <Image
+                    src="/hero-bg.jpg"
+                    alt="Underground mining operation"
+                    fill
+                    className="object-cover opacity-20"
+                    priority
+                />
+                
+                {/* Layer 2: Colorful Animated Gradients */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                     <div className="absolute -top-[10%] -left-[10%] w-[40rem] h-[40rem] bg-blue-600/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
+                     <div className="absolute top-[20%] -right-[10%] w-[35rem] h-[35rem] bg-yellow-600/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse delay-1000"></div>
+                     <div className="absolute -bottom-[10%] left-[20%] w-[45rem] h-[45rem] bg-purple-600/20 rounded-full mix-blend-screen filter blur-[120px] animate-pulse delay-2000"></div>
+                </div>
+
+                {/* Layer 3: Overlay for Text Visibility */}
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-950/80 to-slate-950" />
             </div>
 
             <div className="container mx-auto px-6 relative z-10 text-center">

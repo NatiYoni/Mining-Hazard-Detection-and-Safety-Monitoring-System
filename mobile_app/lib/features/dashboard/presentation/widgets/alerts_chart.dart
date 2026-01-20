@@ -124,14 +124,19 @@ class _AlertsChartState extends State<AlertsChart> {
 
   Widget _buildChart() {
     final data = _processData();
-    if (data.isEmpty) {
+    final totalAlerts = data.fold<int>(0, (sum, p) => sum + p.critical + p.warning + p.info);
+
+    if (totalAlerts == 0) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.bar_chart, size: 48, color: Colors.grey.shade300),
+            Icon(Icons.check_circle_outline, size: 48, color: Colors.green.shade300),
             const SizedBox(height: 16),
-            Text('No data available', style: TextStyle(color: Colors.grey.shade400)),
+            Text(
+              'No alerts in this period', 
+              style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.w500)
+            ),
           ],
         ),
       );
@@ -151,48 +156,83 @@ class _AlertsChartState extends State<AlertsChart> {
   List<_ChartDataPoint> _processData() {
     final now = DateTime.now();
     List<Alert> filteredAlerts = [];
-    DateFormat dateFormat;
-
-    if (_timeRange == 'today') {
-      filteredAlerts = widget.alerts.where((a) {
-        final localTime = a.timestamp.toLocal();
-        return localTime.year == now.year &&
-            localTime.month == now.month &&
-            localTime.day == now.day;
-      }).toList();
-      dateFormat = DateFormat('HH:mm');
-    } else if (_timeRange == 'week') {
-      final weekAgo = now.subtract(const Duration(days: 7));
-      filteredAlerts = widget.alerts.where((a) => a.timestamp.toLocal().isAfter(weekAgo)).toList();
-      dateFormat = DateFormat('E'); // Mon, Tue
-    } else {
-      final monthAgo = now.subtract(const Duration(days: 30));
-      filteredAlerts = widget.alerts.where((a) => a.timestamp.toLocal().isAfter(monthAgo)).toList();
-      dateFormat = DateFormat('MM/dd');
-    }
-
     Map<String, _ChartDataPoint> groups = {};
+    List<String> sortedTimelineKeys = [];
 
-    // Sort alerts by timestamp to ensure correct order
-    filteredAlerts.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-
-    for (var alert in filteredAlerts) {
-      final label = dateFormat.format(alert.timestamp.toLocal());
-      if (!groups.containsKey(label)) {
-        groups[label] = _ChartDataPoint(label, 0, 0, 0);
+    // 1. Initialize buckets based on time range
+    if (_timeRange == 'today') {
+      // 00:00 to 23:00
+      for (int i = 0; i < 24; i += 4) { // 4-hour intervals to reduce clutter
+        final timeKey = '${i.toString().padLeft(2, '0')}:00';
+        groups[timeKey] = _ChartDataPoint(timeKey, 0, 0, 0);
+        sortedTimelineKeys.add(timeKey);
       }
       
-      final severity = alert.severity.toLowerCase();
-      if (severity == 'critical') {
-        groups[label]!.critical++;
-      } else if (severity == 'warning') {
-        groups[label]!.warning++;
+      filteredAlerts = widget.alerts.where((a) {
+        final local = a.timestamp.toLocal();
+        return local.year == now.year && 
+               local.month == now.month && 
+               local.day == now.day;
+      }).toList();
+
+    } else if (_timeRange == 'week') {
+      // Last 7 days
+      for (int i = 6; i >= 0; i--) {
+        final date = now.subtract(Duration(days: i));
+        final key = DateFormat('E').format(date);
+        groups[key] = _ChartDataPoint(key, 0, 0, 0);
+        sortedTimelineKeys.add(key);
+      }
+
+      final weekAgo = now.subtract(const Duration(days: 7));
+      filteredAlerts = widget.alerts.where((a) => a.timestamp.toLocal().isAfter(weekAgo)).toList();
+
+    } else {
+      // Last 30 days (grouped by ~5 days for readability)
+      for (int i = 29; i >= 0; i--) {
+        final date = now.subtract(Duration(days: i));
+        final key = DateFormat('MM/dd').format(date);
+        // Only add key if it doesn't exist (though date math should be unique)
+        if (!groups.containsKey(key)) {
+             groups[key] = _ChartDataPoint(key, 0, 0, 0);
+             sortedTimelineKeys.add(key);
+        }
+      }
+
+      final monthAgo = now.subtract(const Duration(days: 30));
+      filteredAlerts = widget.alerts.where((a) => a.timestamp.toLocal().isAfter(monthAgo)).toList();
+    }
+
+    // 2. Populate with data
+    for (var alert in filteredAlerts) {
+      final local = alert.timestamp.toLocal();
+      String key = '';
+
+      if (_timeRange == 'today') {
+        // Find nearest 4-hour bucket
+        int hour = local.hour;
+        int bucketHour = (hour ~/ 4) * 4;
+        key = '${bucketHour.toString().padLeft(2, '0')}:00';
+      } else if (_timeRange == 'week') {
+        key = DateFormat('E').format(local);
       } else {
-        groups[label]!.info++;
+        key = DateFormat('MM/dd').format(local);
+      }
+
+      if (groups.containsKey(key)) {
+        final severity = alert.severity.toLowerCase();
+        if (severity == 'critical') {
+          groups[key]!.critical++;
+        } else if (severity == 'warning') {
+          groups[key]!.warning++;
+        } else {
+          groups[key]!.info++;
+        }
       }
     }
     
-    return groups.values.toList();
+    // Return values in correct timeline order
+    return sortedTimelineKeys.map((k) => groups[k]!).toList();
   }
 
   BarChartData _buildBarChartData(List<_ChartDataPoint> data) {
@@ -205,11 +245,19 @@ class _AlertsChartState extends State<AlertsChart> {
           sideTitles: SideTitles(
             showTitles: true,
             getTitlesWidget: (value, meta) {
-              if (value.toInt() >= 0 && value.toInt() < data.length) {
+              final index = value.toInt();
+              if (index >= 0 && index < data.length) {
+                if (_timeRange == 'month' && index % 5 != 0) {
+                  return const SizedBox.shrink();
+                } else if (_timeRange == 'today' && index % 2 != 0) {
+                  // Show every other label for 4-hour buckets if we want, but they are already spaced.
+                  // Actually 4h buckets (0, 4, 8..) are 6 items. Fits fine.
+                }
+
                 return Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Text(
-                    data[value.toInt()].label,
+                    data[index].label,
                     style: TextStyle(
                       fontSize: 10, 
                       color: Colors.grey.shade600,
@@ -306,11 +354,16 @@ class _AlertsChartState extends State<AlertsChart> {
           sideTitles: SideTitles(
             showTitles: true,
             getTitlesWidget: (value, meta) {
-              if (value.toInt() >= 0 && value.toInt() < data.length) {
+              final index = value.toInt();
+              if (index >= 0 && index < data.length) {
+                if (_timeRange == 'month' && index % 5 != 0) {
+                  return const SizedBox.shrink();
+                }
+
                 return Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Text(
-                    data[value.toInt()].label,
+                    data[index].label,
                     style: TextStyle(
                       fontSize: 10, 
                       color: Colors.grey.shade600,

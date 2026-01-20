@@ -15,11 +15,12 @@ import (
 
 type SensorController struct {
 	SensorUseCase *usecases.SensorUseCase
+	DeviceUseCase *usecases.DeviceUseCase
 	Hub           *websocket.Hub
 }
 
-func NewSensorController(uc *usecases.SensorUseCase, hub *websocket.Hub) *SensorController {
-	return &SensorController{SensorUseCase: uc, Hub: hub}
+func NewSensorController(uc *usecases.SensorUseCase, duc *usecases.DeviceUseCase, hub *websocket.Hub) *SensorController {
+	return &SensorController{SensorUseCase: uc, DeviceUseCase: duc, Hub: hub}
 }
 
 type SensorDataInput struct {
@@ -108,7 +109,17 @@ func (c *SensorController) ReceiveSensorData(ctx *gin.Context) {
 		})
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Data received successfully"})
+	// [Modified] Check Buzzer State
+	var buzzerState bool = false
+	if device, err := c.DeviceUseCase.GetDeviceByID(deviceID); err == nil {
+		buzzerState = device.BuzzerActive
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":          "Data received successfully",
+		"alerts_generated": len(alerts),
+		"buzzer":           buzzerState,
+	})
 }
 
 func (c *SensorController) GetLatest(ctx *gin.Context) {

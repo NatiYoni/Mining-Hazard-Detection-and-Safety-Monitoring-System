@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_app/features/dashboard/domain/entities/device.dart';
@@ -38,7 +39,6 @@ class _StreamPageState extends State<StreamPage> {
 
           final Device selectedDevice = onlineDevices.firstWhere(
             (d) => d.id == _selectedDeviceId,
-            orElse: () => onlineDevices.first,
           );
 
           return SingleChildScrollView(
@@ -53,6 +53,7 @@ class _StreamPageState extends State<StreamPage> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: _selectedDeviceId,
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Select Online Device',
                     border: OutlineInputBorder(),
@@ -60,7 +61,10 @@ class _StreamPageState extends State<StreamPage> {
                   items: onlineDevices.map((d) {
                     return DropdownMenuItem(
                       value: d.id,
-                      child: Text('${d.id} (${d.status})'),
+                      child: Text(
+                        '${d.id} (${d.status})',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -86,43 +90,7 @@ class _StreamPageState extends State<StreamPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: selectedDevice.latestImageUrl != null
-                        ? Image.network(
-                            selectedDevice.latestImageUrl!,
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.broken_image, color: Colors.white54, size: 48),
-                                    SizedBox(height: 16),
-                                    Text('Failed to load stream', style: TextStyle(color: Colors.white54)),
-                                  ],
-                                ),
-                              );
-                            },
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return const Center(
-                                child: CircularProgressIndicator(color: Colors.white),
-                              );
-                            },
-                          )
-                        : const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.videocam_off, color: Colors.white54, size: 48),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Waiting for stream...',
-                                  style: TextStyle(color: Colors.white54),
-                                ),
-                              ],
-                            ),
-                          ),
+                    child: _buildStreamView(selectedDevice.latestImageUrl),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -170,8 +138,77 @@ class _StreamPageState extends State<StreamPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: const TextStyle(color: Colors.grey)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+        const SizedBox(width: 16),
+        Flexible(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildStreamView(String? imageUrl) {
+    if (imageUrl == null) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.videocam_off, color: Colors.white54, size: 48),
+            SizedBox(height: 16),
+            Text(
+              'Waiting for stream...',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (imageUrl.startsWith('data:image')) {
+      try {
+        final commaIndex = imageUrl.indexOf(',');
+        if (commaIndex != -1) {
+          final base64String = imageUrl.substring(commaIndex + 1);
+          final bytes = base64Decode(base64String.trim());
+          return Image.memory(
+            bytes,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stackTrace) => _buildErrorView(),
+          );
+        }
+      } catch (e) {
+        return _buildErrorView();
+      }
+    }
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+      errorBuilder: (context, error, stackTrace) => _buildErrorView(),
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        );
+      },
+    );
+  }
+
+  Widget _buildErrorView() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.broken_image, color: Colors.white54, size: 48),
+          SizedBox(height: 16),
+          Text('Failed to load stream', style: TextStyle(color: Colors.white54)),
+        ],
+      ),
     );
   }
 }

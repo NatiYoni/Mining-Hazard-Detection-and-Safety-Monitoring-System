@@ -75,8 +75,8 @@ class _AlertCard extends StatelessWidget {
     if (p == null) return 'UNKNOWN HAZARD';
     if (p.fall == true) return 'FALL DETECTED';
     if ((p.gas ?? 0) > 700) return 'GAS LEAK DETECTED';
-    if ((p.temp ?? 0) > 38) return 'CRITICAL HEAT';
-    if ((p.temp ?? 0) > 31) return 'HIGH HEAT';
+    if ((p.temp ?? 0) > 25) return 'CRITICAL HEAT';
+    if ((p.temp ?? 0) > 24) return 'HIGH HEAT';
     return 'UNKNOWN HAZARD';
   }
 

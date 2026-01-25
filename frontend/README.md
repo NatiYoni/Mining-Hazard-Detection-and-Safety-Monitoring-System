@@ -1,3 +1,25 @@
+# Frontend
+
+This folder contains the web frontend for the Mining Hazard Detection and Safety Monitoring System.
+
+## Technologies Used
+- **Next.js** (React framework)
+- **React** (UI library)
+- **TypeScript** (Static typing)
+- **Tailwind CSS** (Styling)
+
+## Structure
+- `src/app/`: Main app pages and layout
+- `src/components/`: Reusable UI components
+- `src/context/`, `src/hooks/`, `src/lib/`: State and logic helpers
+- `public/`: Static assets (images, icons, etc.)
+- `package.json`, `tsconfig.json`: Project configuration
+
+## Features
+- Modern dashboard for monitoring and management
+- Authentication and authorization
+- Real-time data visualization
+- Responsive and accessible UI
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

@@ -1,3 +1,28 @@
+# Mobile App
+
+This folder contains the Flutter mobile application for the Mining Hazard Detection and Safety Monitoring System.
+
+## Technologies Used
+- **Flutter** (UI toolkit)
+- **Dart** (Programming language)
+- **BLoC** (State management)
+- **Dio** (HTTP client)
+- **Provider** (Dependency injection)
+
+## Structure
+- `lib/main.dart`: App entry point
+- `lib/features/`: Feature modules (alerts, devices, sensors, etc.)
+- `lib/core/`: Core utilities and services
+- `lib/injection_container.dart`: Dependency injection setup
+- `test/`: Widget and unit tests
+- `pubspec.yaml`: Dependencies and assets
+
+## Features
+- Cross-platform (Android, iOS, Web)
+- Real-time alerts and device status
+- User authentication
+- Device and sensor management
+- State management using BLoC
 # mobile_app
 
 A new Flutter project.

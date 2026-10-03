@@ -2,6 +2,10 @@
 
 This folder contains the Go backend server for the Mining Hazard Detection and Safety Monitoring System.
 
+## Reproducible Local Evidence
+
+The [sensor-to-alert demonstration](docs/sensor_to_alert_evidence.md) provides one Go test command for synthetic readings, real loopback HTTP/WebSockets, deterministic assertions, and failure cases. Persistence is test-only memory, not PostgreSQL. The guide states the tested boundaries and unsupported delivery/safety guarantees.
+
 ## Technologies Used
 - **Go** (Golang)
 - **Gin** (HTTP web framework)

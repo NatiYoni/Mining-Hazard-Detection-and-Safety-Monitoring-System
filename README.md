@@ -12,6 +12,7 @@ This project is a comprehensive solution for real-time mining hazard detection a
   - [firmware](#firmware)
   - [scripts](#scripts)
 - [Deployment](#deployment)
+- [Local Engineering Evidence](#local-engineering-evidence)
 
 ---
 
@@ -109,6 +110,12 @@ scripts/        # Utility scripts (e.g., data simulation)
 ## Deployment
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions using Docker Compose and environment setup.
+
+---
+
+## Local Engineering Evidence
+
+Run the [synthetic sensor-to-alert demonstration](backend/docs/sensor_to_alert_evidence.md) to exercise the real Go HTTP/controller/use-case/WebSocket path with deterministic assertions. Repository writes use explicitly fake in-memory stores; this is not PostgreSQL integration, durability evidence, or mining-safety validation.
 
 ---
 

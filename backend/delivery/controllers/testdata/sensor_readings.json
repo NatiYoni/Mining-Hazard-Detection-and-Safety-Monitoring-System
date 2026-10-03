@@ -1,0 +1,52 @@
+[
+  {
+    "name": "non_alert_boundaries",
+    "payload": {"gas": 700, "temp": 24, "fall": false, "vibration": 500},
+    "alerts": []
+  },
+  {
+    "name": "gas_alert",
+    "payload": {"gas": 701},
+    "alerts": [{"type": "Gas Hazard", "severity": "Critical"}]
+  },
+  {
+    "name": "heat_warning",
+    "payload": {"temp": 24.5},
+    "alerts": [{"type": "Heat Stress", "severity": "Warning"}]
+  },
+  {
+    "name": "heat_warning_upper_boundary",
+    "payload": {"temp": 25},
+    "alerts": [{"type": "Heat Stress", "severity": "Warning"}]
+  },
+  {
+    "name": "heat_critical",
+    "payload": {"temp": 25.5},
+    "alerts": [{"type": "Heat Stress", "severity": "Critical"}]
+  },
+  {
+    "name": "fall_alert",
+    "payload": {"fall": true},
+    "alerts": [{"type": "Man-Down", "severity": "Critical"}]
+  },
+  {
+    "name": "vibration_alert",
+    "payload": {"vibration": 501},
+    "alerts": [{"type": "Structural Warning", "severity": "High"}]
+  },
+  {
+    "name": "combined_alerts",
+    "payload": {"gas": 701, "temp": 25.5, "fall": true, "vibration": 501},
+    "alerts": [
+      {"type": "Gas Hazard", "severity": "Critical"},
+      {"type": "Heat Stress", "severity": "Critical"},
+      {"type": "Man-Down", "severity": "Critical"},
+      {"type": "Structural Warning", "severity": "High"}
+    ]
+  },
+  {
+    "name": "wrong_field_types_are_ignored",
+    "payload": {"gas": "701", "temp": "25.5", "fall": "true", "vibration": "501"},
+    "alerts": []
+  }
+]

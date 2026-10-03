@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"minesense-backend/infrastructure/websocket"
 	"minesense-backend/usecases"
@@ -49,7 +50,7 @@ func (c *SensorController) ReceiveSensorData(ctx *gin.Context) {
 	if err := json.Unmarshal(bodyBytes, &input); err == nil && input.DeviceID != "" && input.SensorType != "" {
 		// Standard format
 		id, err := uuid.Parse(input.DeviceID)
-		if err != nil {
+		if err != nil || id == uuid.Nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID format"})
 			return
 		}
@@ -88,6 +89,10 @@ func (c *SensorController) ReceiveSensorData(ctx *gin.Context) {
 
 	alerts, err := c.SensorUseCase.ProcessSensorData(deviceID, sensorType, payload)
 	if err != nil {
+		if errors.Is(err, usecases.ErrInvalidSensorPayload) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process data"})
 		return
 	}
@@ -109,16 +114,16 @@ func (c *SensorController) ReceiveSensorData(ctx *gin.Context) {
 		})
 	}
 
-	// [Modified] Check Buzzer State
-	var buzzerState bool = false
-	if device, err := c.DeviceUseCase.GetDeviceByID(deviceID); err == nil {
-		buzzerState = device.BuzzerActive
+	device, err := c.DeviceUseCase.GetDeviceByID(deviceID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch device state"})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":          "Data received successfully",
 		"alerts_generated": len(alerts),
-		"buzzer":           buzzerState,
+		"buzzer":           device.BuzzerActive,
 	})
 }
 

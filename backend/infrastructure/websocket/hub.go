@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"strings"
@@ -37,8 +38,26 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Run() {
+	h.RunContext(context.Background())
+}
+
+// RunContext supports shutdown once HTTP producers have stopped.
+// Cancellation does not interrupt an in-progress client write.
+func (h *Hub) RunContext(ctx context.Context) {
+	defer func() {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		for client := range h.clients {
+			client.Close()
+			delete(h.clients, client)
+		}
+	}()
+
 	for {
 		select {
+		case <-ctx.Done():
+			return
+
 		case client := <-h.register:
 			h.mu.Lock()
 			h.clients[client] = true
